@@ -3,9 +3,10 @@
 # See documentation in:
 # http://doc.scrapy.org/en/latest/topics/items.html
 
+from netease.news_pack.news_item import NewsItem
 from scrapy.item import Item, Field
 
-class NeteaseItem(Item):
+class NeteaseItem(NewsItem):
     # define the fields for your item here like:
     # name = Field()
-    pass
+    boardId = Field()
