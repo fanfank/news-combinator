@@ -5,12 +5,7 @@ from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.selector import Selector
 
 from tencent.items import TencentItem
-
-def ListCombiner(lst):
-    string = ''
-    for e in lst:
-        string += e
-    return string
+from tencent.news_pack.news_func import ListCombiner
 
 class TencentNewsSpider(CrawlSpider):
     name = 'tencent_news_spider'

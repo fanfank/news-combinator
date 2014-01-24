@@ -4,10 +4,14 @@
 # http://doc.scrapy.org/en/latest/topics/items.html
 
 from scrapy.item import Item, Field
-from news_pack.news_item import NewsItem
 
-class TencentItem(NewsItem):
+class NewsItem(Item):
     # define the fields for your item here like:
     # name = Field()
-    pass
+    source = Field()
+    date = Field()
+    newsId = Field()
+    cmtId = Field()
+    contents = Field()
+    comments = Field()
 
