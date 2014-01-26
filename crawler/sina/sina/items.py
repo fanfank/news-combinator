@@ -4,7 +4,7 @@
 # http://doc.scrapy.org/en/latest/topics/items.html
 
 from scrapy.item import Item, Field
-from sina.news_pack import NewsItem
+from sina.news_pack.news_item import NewsItem
 
 class SinaItem(NewsItem):
     # define the fields for your item here like:
