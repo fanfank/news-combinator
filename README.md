@@ -5,11 +5,9 @@ Temporarily used python and Scrapy framework.
     
 TODO
 ====    
-1. Finish 163 and sina's crawlers
-2. Store data in a proper DB
-3. Analyse similar news
-4. Display the combined news on a website
-5. Load comments
-6. ...    
+1. Find a proper Chinese segmentation tool
+2. Split a JSON file into small files, every file contains only one piece of news
+3. Read some articles about SVM
+4. Try to categorize different news
 
 
