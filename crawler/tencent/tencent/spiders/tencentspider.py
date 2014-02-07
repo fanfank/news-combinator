@@ -13,7 +13,7 @@ class TencentNewsSpider(CrawlSpider):
     start_urls = ['http://news.qq.com']
     url_pattern = r'(.*)/a/(\d{8})/(\d+)\.htm'
     rules = [Rule(SgmlLinkExtractor(allow=[url_pattern]), 'parse_news')]
-    
+
     def parse_news(self, response):
         sel = Selector(response)
         pattern = re.match(self.url_pattern, str(response.url))
