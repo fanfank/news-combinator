@@ -11,5 +11,9 @@ BOT_NAME = 'sina'
 SPIDER_MODULES = ['sina.spiders']
 NEWSPIDER_MODULE = 'sina.spiders'
 
+ITEM_PIPELINES = {
+        'sina.pipelines.SinaPipeline': 1,
+        }
+
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'sina (+http://www.yourdomain.com)'

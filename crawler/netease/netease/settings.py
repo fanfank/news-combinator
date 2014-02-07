@@ -11,5 +11,9 @@ BOT_NAME = 'netease'
 SPIDER_MODULES = ['netease.spiders']
 NEWSPIDER_MODULE = 'netease.spiders'
 
+ITEM_PIPELINES = {
+        'netease.pipelines.NeteasePipeline': 1,
+        }
+
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'netease (+http://www.yourdomain.com)'

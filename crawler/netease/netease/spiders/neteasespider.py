@@ -26,6 +26,6 @@ class NeteaseNewsSpider(CrawlSpider):
         item['boardId'] = sel.re(r"boardId = \"(.*)\"")[0]
         item['comments'] = {'link':str('http://comment.news.163.com/'+item['boardId']+'/'+item['cmtId']+'.html')}
         item['contents'] = {'link':str(response.url), 'title':u'', 'passage':u''}
-        item['contents']['title'] = sel.xpath("//h1[@h1='h1title']/text()").extract()[0]
+        item['contents']['title'] = sel.xpath("//h1[@id='h1title']/text()").extract()[0]
         item['contents']['passage'] = ListCombiner(sel.xpath('//p/text()').extract())
         return item
