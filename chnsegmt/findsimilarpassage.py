@@ -16,7 +16,32 @@ class SimilarPassage:
         return self.similarity > other.similarity
 
     def Relevant(self):
-        return self.similarity < -0.80
+        return self.similarity < -0.75
+
+def FindSimilarPassageFromSet(news_set, example_tf):
+    heap = []
+    tags = []
+    for tag in example_tf.keys():
+        tags.append(tag)
+
+    for file_path in news_set:
+        tf = GetTermFreqFromFile(tags, file_path)
+        if tf == None:
+            continue
+        similarity = CosinSimilarityForDict(example_tf, tf)
+        if not similarity == None:
+            heap.append(SimilarPassage(similarity * -1.0, file_path))
+
+    heapq.heapify(heap)
+    if len(heap) == 0:
+        return None
+    result = heapq.heappop(heap)
+    if result.Relevant():
+        print "Similarity: " + str(result.similarity)
+        news_set.discard(result.file_path)
+        return result.file_path
+    else:
+        return None
 
 def FindSimilarPassageFromDirectory(source_dir, example_tf):
     if not IsDirectory(source_dir):
