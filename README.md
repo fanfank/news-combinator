@@ -11,5 +11,5 @@ TODO
 3. <del>Read some articles about SVM</del> (Did not use SVM, but tfidf and cosin similarity)
 4. <del>Try to categorize different news</del>
 5. Build another IDF dictionary from web news
-
-
+6. <del>Categorize those similar passages in sina and netease but not in tencent</del>   
+7. Make a website display the results and show the comments
