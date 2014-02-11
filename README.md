@@ -8,7 +8,8 @@ TODO
 ====    
 1. <del>Find a proper Chinese segmentation tool</del>
 2. <del>Split a JSON file into small files, every file contains only one piece of news</del>
-3. Read some articles about SVM
-4. Try to categorize different news
+3. <del>Read some articles about SVM</del> (Did not use SVM, but tfidf and cosin similarity)
+4. <del>Try to categorize different news</del>
+5. Build another IDF dictionary from web news
 
 
