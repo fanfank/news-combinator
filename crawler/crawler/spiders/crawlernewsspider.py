@@ -69,7 +69,7 @@ class TencentNewsSpider(CrawlSpider):
         item['source'] = 'tencent' # pattern.group(1)
         item['date'] = pattern.group(2)
         item['newsId'] = pattern.group(3)
-        item['cmtId'] = sel.re(r"cmt_id = (.*)")[0] # unicode string
+        item['cmtId'] = (sel.re(r"cmt_id = (.*);"))[0] # unicode string
         item['comments'] = {'link':str('http://coral.qq.com/')+item['cmtId']}
         item['contents'] = {'link':str(response.url), 'title':u'', 'passage':u''}
         item['contents']['title'] = sel.xpath('//h1/text()').extract()[0]

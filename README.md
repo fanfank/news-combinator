@@ -10,5 +10,6 @@ TODO
 2. <del>Split a JSON file into small files, every file contains only one piece of news</del>
 3. Read some articles about SVM
 4. Try to categorize different news
+5. Build another IDF dictionary from web news
 
 

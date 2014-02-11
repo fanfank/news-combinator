@@ -16,15 +16,16 @@ num_of_tags = 10
 file_path = ""
 dir_path = ""
 
-if not opt.number_of_tags is None:
+if not (opt.number_of_tags is None and opt.number_of_tags >= 1):
     num_of_tags = int(opt.number_of_tags)
 
-if opt.dir_path is None and opt.file_path is None:
+if (opt.dir_path is None and opt.file_path is None) or (not opt.dir_path is None and not opt.file_path is None):
     print USAGE
     sys.exit(1)
 elif opt.dir_path is None:
     file_path = opt.file_path
-    ExtractTagsFromFile(file_path, num_of_tags = num_of_tags)
+    tags = ExtractTagsFromFile(file_path, num_of_tags = num_of_tags)
+    WriteTagsToFile(file_path[:-5] + '.tags', tags, 'utf-8')
 else:
     dir_path = opt.dir_path
     ExtractTagsFromDirectory(dir_path, num_of_tags = num_of_tags)
