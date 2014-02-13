@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+{% block body %}
+    <ul class = entries>
+    {% for entry in entries %}
+        <li><h2>{{ entry.date[:4] }}年{{ entry.date[4:6] }}月{{ entry.date[6:8] }}日新闻</h2>
+        <ul class = datedirs>
+        {% for news in entry.news %}
+            <li><span>{{ news.title }}</span>
+            <span class = icons>
+            {% if 'tencent' in news.sources %}
+                <img src = "{{ url_for('static', filename = 'icons/tencent.png') }}" width = '15' height = '15'>
+            {% endif %}
+            {% if 'netease' in news.sources %}
+                <img src = "{{ url_for('static', filename = 'icons/netease.png') }}" width = '15' height = '15'>
+            {% endif %}
+            {% if 'sina' in news.sources %}
+                <img src = "{{ url_for('static', filename = 'icons/sina.png') }}" width = '15' height = '15'>
+            {% endif %}
+            </span>
+        {% else %}
+            <li><b>No news for this day</b>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <li><em>No news so far</em>
+    {% endfor %}
+    </ul>
+{% endblock %}
