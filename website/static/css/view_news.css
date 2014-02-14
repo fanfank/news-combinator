@@ -1,0 +1,15 @@
+h1 {
+    color: #377ba8;
+}
+
+.tabs {
+    float: left;
+    margin: 5px 5px;
+    padding: 10px 10px 8px;
+    border: 2px solid #009dce;
+    display: inline-block;
+}
+
+.tabcontent {
+    display: block;
+}

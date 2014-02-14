@@ -1,12 +1,13 @@
 # reetseenews.py
 from datastructures import News, DateDir
-from flask import Flask, redirect, url_for, g, abort, render_template, flash
+from flask import Flask, request, redirect, url_for, g, abort, render_template, flash
 import codecs
+import json
 import os
 import sys
 sys.path.append('../chnsegmt')
 
-from basicfuncs import IsDirectory
+from basicfuncs import IsDirectory, IsFile
 
 # create the application
 app = Flask(__name__)
@@ -54,6 +55,44 @@ def get_entries(timespan = 5):
                 g.entries[-1].get_news()
         g.entries.sort(reverse = True)
     return g.entries
+
+def dated_url_for(endpoint, **values):
+    if endpoint == 'static':
+        filename = values.get('filename', None)
+        if filename:
+            file_path = os.path.join(app.root_path,
+                                     endpoint, filename)
+            values['q'] = int(os.stat(file_path).st_mtime)
+    return url_for(endpoint, **values)
+
+@app.context_processor
+def override_url_for():
+    return dict(url_for=dated_url_for)
+
+@app.route('/error')
+def error_page():
+    error = request.args.get('errcode')
+    if not error == None:
+        return error
+    else:
+        return "Something wrong happends"
+
+@app.route('/view/<date>/<dir_name>')
+def view_entry(date, dir_name):
+    dir_path = os.path.join(NEWSDIR, date, dir_name)
+    if not IsDirectory(dir_path):
+        return redirect(url_for('error_page', errcode = 'No this directory'))
+    news = {}
+    for file_name in os.listdir(dir_path):
+        file_path = os.path.join(dir_path, file_name)
+        if IsFile(file_path) and file_name[-4:] == 'json':
+            f = codecs.open(file_path, 'r', 'utf-8')
+            js = json.load(f)
+            f.close()
+            news[js['source']] = js
+    return render_template('view_news.html', news = news)
+    #return 'http://localhost:5000'
+    #return os.path.join(parent_dir, dir_name)
 
 @app.teardown_appcontext
 def tidy(error):
