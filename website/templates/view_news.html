@@ -1,0 +1,66 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//En" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>吹水新闻</title>
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/view_news.css') }}">
+        <script type='text/javascript' src="{{ url_for('static', filename='js/jquery-1.11.0.min.js') }}"></script>
+        <script type='text/javascript'>
+            $(document).ready(function(){
+                    var lastshowname = "";
+                    {% for source in news %}
+                        var content = document.getElementById("{{ 'content_' + source }}");
+                        //append origin address
+                        $("#{{ 'content_' + source }}").hide();
+                        var link_block = document.createElement('div');
+                        var text = document.createTextNode('文章来源：');
+                        var a_tag = document.createElement('a');
+                        a_tag.href = "{{ news[source]['contents']['link'] }}";
+                        a_tag.innerHTML = a_tag.href;
+                        link_block.appendChild(text);
+                        link_block.appendChild(a_tag);
+                        content.appendChild(link_block);
+
+                        //append title
+                        var title_block = document.createElement('div');
+                        var text = document.createTextNode('文章标题：');
+                        var title = document.createElement('b');
+                        title.innerHTML = {{ news[source]['contents']['title']|tojson|safe }};
+                        title_block.appendChild(text);
+                        title_block.appendChild(title);
+                        content.appendChild(title_block);
+
+                        //append passage
+                        var passage_block = document.createElement('div');
+                        var cc = {{ news[source]['contents']['passage']|safe|tojson }};
+                        var passage = document.createTextNode(cc);
+                        passage_block.appendChild(passage) ;
+                        content.appendChild(passage_block);
+                    {% endfor %}
+                    $('div.tabs').click(function(){
+                        var showname = $(this).attr('name');
+                        if(lastshowname != showname) {
+                            if(lastshowname != '')
+                                $('#content_' + lastshowname).hide();
+                            $('#content_' + showname).show();
+                            lastshowname = showname;
+                        }
+                    })
+            });
+        </script>
+
+    </head>
+    <body>
+        <h1>吹水新闻</h1>
+        {% for source in news.keys() %}
+        <div id = "{{ 'tab_' + source }}" name = "{{ source }}" class = 'tabs'><img src = "{{ url_for('static', filename = 'icons/' + source + '.png') }}">点击查看</div>
+        {% else %}
+        <em>No sources</em>
+        {% endfor %}
+
+        {% for source in news.keys() %}
+        <div id = "{{ 'content_' + source }}" class = 'tabcontent'>
+        </div>
+        {% endfor %}
+    </body>
+</html>

@@ -11,6 +11,8 @@ import json
 import os
 import re
 import sys
+import time
+
 
 def Categorize(source_dirs, output_dir, num_of_tags):
     if not IsDirectory(output_dir):
@@ -27,6 +29,10 @@ def Categorize(source_dirs, output_dir, num_of_tags):
         else:
             tmp_set = Set([])
             for parent, dir_names, file_names in os.walk(source_dir):
+                pattern = re.match(r'.*/([0-9]{8})[/]{,1}$', parent)
+                if pattern != None and pattern.group(1) < OldestDir:
+                    print 'Directory: ' + parent + ' is too old, skipped'
+                    continue
                 for file_name in file_names:
                     if file_name[-4:] == 'json':
                         tmp_set.add(parent + '/' + file_name)
@@ -84,4 +90,14 @@ if not (opt.number_of_tags is None and opt.number_of_tags >= 1):
 output_dir = opt.output_dir
 source_dirs = args
 
+f = codecs.open(os.path.join(output_dir, 'magicnumber'), 'r', 'utf-8')
+timestamp = f.read()
+f.close()
+OldestDir = time.strftime('%Y%m%d', time.localtime(float(timestamp)))
+
 Categorize(source_dirs, output_dir, num_of_tags)
+
+timestamp = str(time.time())
+f = codecs.open(os.path.join(output_dir, 'magicnumber'), 'w', 'utf-8')
+f.write(timestamp)
+f.close()
