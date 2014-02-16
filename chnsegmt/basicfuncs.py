@@ -1,22 +1,12 @@
 # basicfuncs.py
 import math
 import os
+import time
 
-def IsDirectory(dir_path):
-    if (not os.path.exists(dir_path)) or os.path.isfile(dir_path):
-        return False
-    else:
-        return True
-
-def IsFile(file_path):
-    if not (os.path.exists(file_path) and os.path.isfile(file_path)):
-        return False
-    else:
-        return True
-
-def MakeDirectory(dir_path):
-    if not IsDirectory(dir_path):
-        os.makedirs(dir_path)
+def ADtimeToTimestamp(time_str, time_format, length = 10):
+    if time_str == None:
+        return None
+    return str(time.mktime(time.strptime(time_str, time_format)))[:length]
 
 def CopyFile(source_file, target_dir):
     os.system("cp %s %s" % (source_file, target_dir))
@@ -52,4 +42,26 @@ def CosinSimilarityForDict(dict1, dict2):
         vector1.append(dict1[key])
         vector2.append(dict2[key])
     return CosinSimilarity(vector1, vector2)
+
+def GetTimestamp(length):
+    return str(time.time())[:length]
+
+def IsDirectory(dir_path):
+    if (not os.path.exists(dir_path)) or os.path.isfile(dir_path):
+        return False
+    else:
+        return True
+
+def IsFile(file_path):
+    if not (os.path.exists(file_path) and os.path.isfile(file_path)):
+        return False
+    else:
+        return True
+
+def MakeDirectory(dir_path):
+    if not IsDirectory(dir_path):
+        os.makedirs(dir_path)
+
+def TimestampToADtime(timestamp, time_format = '%Y-%m-%d %H:%M:%S'):
+    return str(time.strftime(time_format, time.localtime(float(timestamp))))
 

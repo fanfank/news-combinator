@@ -1,6 +1,7 @@
 # reetseenews.py
 from datastructures import News, DateDir
 from flask import Flask, request, redirect, url_for, g, abort, render_template, flash
+from getcomments import GetComments
 import codecs
 import json
 import os
@@ -22,27 +23,14 @@ app.config.update(dict(
 app.config.from_envvar('REETSEE_NEWS_SETTINGS', silent = True)
 NEWSDIR = os.path.join(app.root_path, '../result')
 
-def get_magic_number():
-    f = codecs.open(os.path.join(NEWSDIR, 'magicnumber'), 'r', 'utf-8')
-    magicnumber = f.read()
-    f.close()
-    return magicnumber
-
-#------test
-def print_entries(entries):
-    for entry in entries:
-        print 'Date: ' + entry.date
-        for news in entry.news:
-            print '   news: ' + news.title
-            if 'tencent' in news.sources:
-                print '        tencent',
-            if 'netease' in news.sources:
-                print 'netease',
-            if 'sina' in news.sources:
-                print 'sina'
-        #    print os.path.join(news.parent_dir, news.dir_name)
-#----------
-
+def dated_url_for(endpoint, **values):
+    if endpoint == 'static':
+        filename = values.get('filename', None)
+        if filename:
+            file_path = os.path.join(app.root_path,
+                                     endpoint, filename)
+            values['q'] = int(os.stat(file_path).st_mtime)
+    return url_for(endpoint, **values)
 
 def get_entries(timespan = 5):
     if (not hasattr(g, 'entries')) or g.magicnumber != get_magic_number():
@@ -56,18 +44,43 @@ def get_entries(timespan = 5):
         g.entries.sort(reverse = True)
     return g.entries
 
-def dated_url_for(endpoint, **values):
-    if endpoint == 'static':
-        filename = values.get('filename', None)
-        if filename:
-            file_path = os.path.join(app.root_path,
-                                     endpoint, filename)
-            values['q'] = int(os.stat(file_path).st_mtime)
-    return url_for(endpoint, **values)
+def get_magic_number():
+    f = codecs.open(os.path.join(NEWSDIR, 'magicnumber'), 'r', 'utf-8')
+    magicnumber = f.read()
+    f.close()
+    return magicnumber
+
+def print_entries(entries):
+    for entry in entries:
+        print 'Date: ' + entry.date
+        for news in entry.news:
+            print '   news: ' + news.title
+            if 'tencent' in news.sources:
+                print '        tencent',
+            if 'netease' in news.sources:
+                print 'netease',
+            if 'sina' in news.sources:
+                print 'sina'
+        #    print os.path.join(news.parent_dir, news.dir_name)
 
 @app.context_processor
 def override_url_for():
     return dict(url_for=dated_url_for)
+
+@app.teardown_appcontext
+def tidy(error):
+    pass
+
+@app.route('/')
+def show_news():
+    entries = get_entries(5)
+    return render_template('show_entries.html', entries = entries)
+
+"""
+@app.route('/comments')
+def get_comments():
+    return jsonify(GetComments(request.args))
+"""
 
 @app.route('/error')
 def error_page():
@@ -82,7 +95,9 @@ def view_entry(date, dir_name):
     dir_path = os.path.join(NEWSDIR, date, dir_name)
     if not IsDirectory(dir_path):
         return redirect(url_for('error_page', errcode = 'No this directory'))
+    # get news contents and news comments
     news = {}
+    comments = []
     for file_name in os.listdir(dir_path):
         file_path = os.path.join(dir_path, file_name)
         if IsFile(file_path) and file_name[-4:] == 'json':
@@ -90,18 +105,8 @@ def view_entry(date, dir_name):
             js = json.load(f)
             f.close()
             news[js['source']] = js
-    return render_template('view_news.html', news = news)
-    #return 'http://localhost:5000'
-    #return os.path.join(parent_dir, dir_name)
-
-@app.teardown_appcontext
-def tidy(error):
-    pass
-
-@app.route('/')
-def show_news():
-    entries = get_entries(5)
-    return render_template('show_entries.html', entries = entries)
+            comments.extend(GetComments(js))
+    return render_template('view_news.html', news = news, comments = comments)
 
 if __name__ == '__main__':
     app.run()
