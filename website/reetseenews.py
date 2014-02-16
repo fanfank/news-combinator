@@ -106,6 +106,9 @@ def view_entry(date, dir_name):
             f.close()
             news[js['source']] = js
             comments.extend(GetComments(js))
+
+    # sort the comments
+    comments.sort(key=lambda x:x['time'])
     return render_template('view_news.html', news = news, comments = comments)
 
 if __name__ == '__main__':
