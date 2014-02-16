@@ -5,7 +5,7 @@ import re
 import sys
 sys.path.append('../chnsegmt')
 
-from basicfuncs import GetTimestamp
+from basicfuncs import ADtimeToTimestamp, GetTimestamp
 
 def GetComments(para_dict):
     source = para_dict.get('source')
@@ -20,22 +20,28 @@ def GetComments(para_dict):
 
 def GetCommentsFromTencent(para_dict): # currently hot comments
     domain = 'coral.qq.com'
-    req = '/article/%s/hotcomment?reqnum=%s&callback=myHotcommentList&_=%s%d' % (para_dict.get('cmtId'), para_dict.get('reqNum', '10'), GetTimestamp(10), 444)
-    data = GetDataFromHttp(domain, req)
-    return data
+    req = '/article/%s/hotcomment?reqnum=%s&callback=myHotcommentList&_=%s%s' % (para_dict.get('cmtId'), para_dict.get('reqNum', '10'), GetTimestamp(10), '444')
+    data = re.match(r'^myHotcommentList\((.*)\)', GetDataFromHttp(domain, req)).group(1)
+    js = StrToJson(data)
+    path_dict = {'source':'tencent', 'prefix':['data', 'commentid'], 'user':['userinfo', 'nick'], 'time':['time'], 'content':['content']}
+    return ReformatComments(js, path_dict)
 
 def GetCommentsFromNetease(para_dict): # currently hot comments
     domain = 'comment.news.163.com'
     req = '/data/%s/df/%s_1.html' % (para_dict.get('boardId'), para_dict.get('cmtId'))
-    data = unicode(GetDataFromHttp(domain, req), 'utf-8').encode('gbk')
+    data = unicode(GetDataFromHttp(domain, req), 'utf-8')#.encode('gbk')
     data = re.match(r'^var \w+=({.*});$', data).group(1)
-    return data
+    js = StrToJson(data)
+    path_dict = {'source':'netease', 'prefix':['hotPosts'], 'user':['1', 'n'], 'time': ['1', 't'], 'content': ['1', 'b']}
+    return ReformatComments(js, path_dict, ADtimeToTimestamp, '%Y-%m-%d %H:%M:%S')
 
 def GetCommentsFromSina(para_dict):
     domain = 'comment5.news.sina.com.cn'
-    req = '/page/info?format=%s&channel=%s&newsid=%s&group=%s&compress=1&ie=gbk&oe=gbk&page=%s&page_size=%s&jsvar=requestId_%s' % ('json', para_dict.get('channelId'), para_dict.get('cmtId'), '0', '1', '100', '444')
-    data = GetDataFromHttp(domain, req)
-    return data
+    req = '/page/info?format=%s&channel=%s&newsid=%s&group=%s&compress=1&ie=gbk&oe=gbk&page=%s&page_size=%s&jsvar=requestId_%s' % (para_dict.get('format', 'json'), para_dict.get('channelId'), para_dict.get('cmtId'), para_dict.get('group', '0'), para_dict.get('page', '1'), para_dict.get('pageSize', '100'), para_dict.get('requestId', '444'))
+    data = unicode(GetDataFromHttp(domain, req), 'gbk')
+    js = StrToJson(data)
+    path_dict = {'source':'sina', 'prefix':['result', 'hot_list'], 'user':['nick'], 'time':['time'], 'content':['content']}
+    return ReformatComments(js, path_dict, ADtimeToTimestamp, '%Y-%m-%d %H:%M:%S')
 
 def GetDataFromHttp(domain, req):
     conn = httplib.HTTPConnection(domain)
@@ -50,3 +56,36 @@ def GetDataFromHttp(domain, req):
     conn.close()
     return data
 
+def ReformatComments(js, path_dict, time_conversion_func = None, time_conversion_args = None):
+    comments_list = []
+    comments = js
+    for key in path_dict['prefix']:
+        comments = comments[key]
+
+    for comment in comments:
+        new_comment = {'source':path_dict['source'], 'user': comment, 'time':comment, 'content':comment}
+        # get content
+        for key in path_dict['content']:
+            new_comment['content'] = new_comment['content'].get(key)
+            
+        # get time
+        for key in path_dict['time']:
+            new_comment['time'] = new_comment['time'].get(key)
+
+        # get user
+        for key in path_dict['user']:
+            new_comment['user'] = new_comment['user'].get(key)
+
+        if new_comment['user'] == None or new_comment['time'] == None or new_comment['content'] == None:
+            continue
+
+        # convert time to timestamp
+        if time_conversion_func != None:
+            new_comment['time'] = time_conversion_func(str(new_comment['time']), time_conversion_args)
+
+        comments_list.append(new_comment)
+
+    return comments_list
+
+def StrToJson(data):
+    return json.loads(data)
