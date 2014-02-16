@@ -12,4 +12,6 @@ TODO
 4. <del>Try to categorize different news</del>
 5. Build another IDF dictionary from web news
 6. <del>Categorize those similar passages in sina and netease but not in tencent</del>   
-7. Make a website display the results and show the comments
+7. <del>Make a website display the results and show the comments</del>   
+8. Improve categorization performance      
+9. Make the website more beautiful!    
