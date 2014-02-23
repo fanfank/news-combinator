@@ -13,9 +13,16 @@ class CrawlerPipeline(object):
     def process_item(self, item, spider):
         dir_path = self.current_dir + '/docs/' + item['source'] + '/' + item['date']
         if not os.path.exists(dir_path):
-            os.mkdir(dir_path)
+            os.makedirs(dir_path)
 
-        news_file = codecs.open(dir_path + '/' + item['newsId'] + '.json', 'w', 'utf-8')
+        news_file_path = dir_path + '/' + item['newsId'] + '.json'
+        if os.path.exists(news_file_path) and os.path.isfile(news_file_path):
+            print '---------------------------------------'
+            print item['newsId'] + '.json exists, not overriden'
+            print '---------------------------------------'
+            return item
+
+        news_file = codecs.open(news_file_path, 'w', 'utf-8')
         line = json.dumps(dict(item))
         news_file.write(line)
         news_file.close()
