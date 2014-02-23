@@ -9,6 +9,7 @@ import sys
 sys.path.append('../chnsegmt')
 
 from basicfuncs import IsDirectory, IsFile
+from getabstract import GetPassageAbstract
 
 # create the application
 app = Flask(__name__)
@@ -109,7 +110,9 @@ def view_entry(date, dir_name):
 
     # sort the comments
     comments.sort(key=lambda x:x['time'])
-    return render_template('view_news.html', news = news, comments = comments)
+    comment_abstract = GetPassageAbstract('\n'.join([comment['content'] for comment in comments]), 0.5, 0.1, '|')
+    #comment_abstract.encode('utf-8')
+    return render_template('view_news.html', news = news, comments = comments, comment_abstract = comment_abstract)
 
 if __name__ == '__main__':
     app.run()

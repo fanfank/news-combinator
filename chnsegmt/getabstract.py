@@ -5,10 +5,14 @@ from sets import Set
 import jieba
 import jieba.posseg as pseg
 import sys
-sys.path.append('./user_dicts/')
+
+USER_DICTS_PATH = '../chnsegmt/user_dicts'
+
+if __name__ == '__main__':
+    USER_DICTS_PATH = 'user_dicts'
 
 elmn_dict = {}
-f = open('user_dicts/elmnattrdict.txt', 'r')
+f = open(USER_DICTS_PATH + '/elmnattrdict.txt', 'r')
 lines = f.readlines()
 f.close()
 for line in lines:
@@ -17,7 +21,7 @@ for line in lines:
 #print elmn_dict
 
 class Sentence():
-    f = open('user_dicts/sentencesegmtdict.txt', 'r')
+    f = open(USER_DICTS_PATH + '/sentencesegmtdict.txt', 'r')
     segmt_list = map(lambda x: unicode(x[:-1], 'utf-8'), f.readlines())
     segmt_list.append(u'\n')
     f.close()
@@ -25,7 +29,7 @@ class Sentence():
         self.content = content
         self.weight = float(weight)
 
-def GetAbstract(sentences, tags, sentences_factor):
+def GetAbstract(sentences, tags, sentences_factor, join_character = ''):
     tags_set = Set(tags)
     for sentence in sentences:
         words = list(jieba.cut(sentence.content))
@@ -45,9 +49,9 @@ def GetAbstract(sentences, tags, sentences_factor):
     for sentence in sentences:
         if sentence.weight > 0 and sentence.weight > thresh:
             ans.append(sentence.content)
-    return ''.join(ans)
+    return join_character.join(ans)
 
-def GetPassageAbstract(passage, keys_factor = 0.5, sentences_factor = 0.8):
+def GetPassageAbstract(passage, keys_factor = 0.5, sentences_factor = 0.8, join_character = ''):
     if keys_factor <= 0 or keys_factor > 1:
         print "Error: keys_factor: " + keys_factor + " illegal, corrected to 0.5"
         keys_factor = 0.5
@@ -57,7 +61,7 @@ def GetPassageAbstract(passage, keys_factor = 0.5, sentences_factor = 0.8):
     passage = TrimSpaces(passage)    
     sentences = GetPassageSentences(passage)
     tags = GetPassageTags(passage, keys_factor)
-    return GetAbstract(sentences, tags, sentences_factor)
+    return GetAbstract(sentences, tags, sentences_factor, join_character)
 
 def GetPassageSentences(passage):
     text = passage #unicode(passage, 'utf-8')
@@ -87,8 +91,17 @@ def GetPassageTags(passage, keys_factor):
         if elmn_dict.get(word.flag) != None:
             if elmn_dict[word.flag] != 0: #'0':
                 tags[word.word] = 1
-        elif elmn_dict[word.flag[0]+'*'] != 0: #'0':
+        elif elmn_dict.get(word.flag[0]+'*') != None: #'0':
+            if elmn_dict[word.flag[0] + '*'] != 0:
+                tags[word.word] = 1
+        else:
+            print 'Warning: word: ' + word.word,word.flag[0] + ' attr not seen, counted'
             tags[word.word] = 1
+
+    #   test
+        #if tags.get(word.word) != None:
+         #   print 'Added',word.word,word.flag,
+            
     #print '____________',
     #for w in GetListFromDict(tags, lambda x,y: x[1]>y[1], keys_factor):
     #    print w,

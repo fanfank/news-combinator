@@ -77,6 +77,11 @@
         <div id = "{{ 'content_' + source }}" class = 'tabcontent'>
         </div>
         {% endfor %}
+        <div id = 'comment_abstract' class = 'comment_abstract'>
+            <b>评论概括：</b>
+            <i>{{ comment_abstract|safe }}</i>
+        </div>
+
         <div id = 'comment_block'>
             <div id = 'hot_comments'>
             </div>
