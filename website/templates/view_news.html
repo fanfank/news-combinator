@@ -3,6 +3,7 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <title>吹水新闻</title>
+        <a href="{{ url_for('show_news') }}">返回主页</a>
         <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/view_news.css') }}">
         <script type='text/javascript' src="{{ url_for('static', filename='js/jquery-1.11.0.min.js') }}"></script>
         <script type='text/javascript' src="{{ url_for('static', filename='js/json_sans_eval.js') }}"></script>
@@ -42,10 +43,10 @@
                     //show hot comments
                     {% for comment in comments %}
                         var cm = $('<div></div>');
-                        var icon = "<img src = \"{{ url_for('static', filename = 'icons/' + comment['source'] + '.png') }}\" width = '15' height = '15'>"
-                        var user = "<b>{{ comment['user'] }}</b>";
-                        var time = "<i>{{ comment['time'] }}</i>";
-                        var p = "<p>{{ comment['content'] }}</p>";
+                        var icon = "<img src = {{ url_for('static', filename = 'icons/' + comment['source'] + '.png') }}|safe|tojson width = '15' height = '15'>"
+                        var user = "<b>" + {{ comment['user']|safe|tojson }}+ "</b>";
+                        var time = "<i>" + {{ comment['time']|safe|tojson }} + "</i>";
+                        var p = "<p>" + {{ comment['content']|safe|tojson }} + "</p>";
                         cm.append(icon, user, time, p);
                         $('#hot_comments').append(cm);
                     {% endfor %}

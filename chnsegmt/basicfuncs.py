@@ -65,3 +65,25 @@ def MakeDirectory(dir_path):
 def TimestampToADtime(timestamp, time_format = '%Y-%m-%d %H:%M:%S'):
     return str(time.strftime(time_format, time.localtime(float(timestamp))))
 
+def TrimSpaces(text):
+    lst = [u' ', u'\t', u'\n', u'\r']
+    front_index = 0
+    for i in range(0, len(text)):
+        if text[i] in lst:
+            front_index += 1
+        else:
+            break
+    text = text[front_index:]
+    tail_index = len(text) - 1
+    for i in range(tail_index, 0, -1):
+        if text[i] in lst:
+            tail_index -= 1
+        else:
+            break
+    text = text[0:tail_index]
+    return text
+
+def UniqueList(L):
+    from sets import Set
+    return list(Set(L))
+
