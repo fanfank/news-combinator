@@ -32,15 +32,15 @@ def GetAbstract(sentences, tags, sentences_factor):
         for word in words:
             if word in tags_set:
                 sentence.weight += 1.0/len(words)
-    PRINT(sentences)
+    #PRINT(sentences)
     result = sorted(sentences, key=lambda s:s.weight, reverse=True)
-    print '__________________________'
-    PRINT(result)
-    print '__________________________'
+    #print '__________________________'
+    #PRINT(result)
+    #print '__________________________'
 
     thresh_index = int(min((round(len(sentences)*sentences_factor), len(sentences) - 1)))
     thresh = result[thresh_index].weight
-    print thresh_index, len(sentences), thresh
+    #print thresh_index, len(sentences), thresh
     ans = ['']
     for sentence in sentences:
         if sentence.weight > 0 and sentence.weight > thresh:
