@@ -13,7 +13,6 @@ import re
 import sys
 import time
 
-
 def Categorize(source_dirs, output_dir, num_of_tags):
     if not IsDirectory(output_dir):
         print "output_dir not exists or not a directory"
@@ -30,11 +29,11 @@ def Categorize(source_dirs, output_dir, num_of_tags):
             tmp_set = Set([])
             for parent, dir_names, file_names in os.walk(source_dir):
                 pattern = re.match(r'.*/([0-9]{8})[/]{,1}$', parent)
-                if pattern != None and pattern.group(1) < OldestDir:
+                if pattern != None and os.stat(parent).st_mtime < last_mtime: #pattern.group(1) < OldestDir:
                     print 'Directory: ' + parent + ' is too old, skipped'
                     continue
                 for file_name in file_names:
-                    if file_name[-4:] == 'json':
+                    if file_name[-4:] == 'json' and os.stat(parent + '/' + file_name).st_mtime >= last_mtime:
                         tmp_set.add(parent + '/' + file_name)
             news_sets.append(tmp_set)
 
@@ -92,6 +91,7 @@ source_dirs = args
 
 f = codecs.open(os.path.join(output_dir, 'magicnumber'), 'r', 'utf-8')
 timestamp = f.read()
+last_mtime = int(re.match('([0-9]{10}).*', timestamp).group(1))
 f.close()
 OldestDir = time.strftime('%Y%m%d', time.localtime(float(timestamp)))
 
