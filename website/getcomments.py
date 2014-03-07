@@ -62,28 +62,29 @@ def ReformatComments(js, path_dict, time_conversion_func = None, time_conversion
     for key in path_dict['prefix']:
         comments = comments[key]
 
-    for comment in comments:
-        new_comment = {'source':path_dict['source'], 'user': comment, 'time':comment, 'content':comment}
-        # get content
-        for key in path_dict['content']:
-            new_comment['content'] = new_comment['content'].get(key)
+    if comments is not None:
+        for comment in comments:
+            new_comment = {'source':path_dict['source'], 'user': comment, 'time':comment, 'content':comment}
+            # get content
+            for key in path_dict['content']:
+                new_comment['content'] = new_comment['content'].get(key)
             
-        # get time
-        for key in path_dict['time']:
-            new_comment['time'] = new_comment['time'].get(key)
+            # get time
+            for key in path_dict['time']:
+                new_comment['time'] = new_comment['time'].get(key)
 
-        # get user
-        for key in path_dict['user']:
-            new_comment['user'] = new_comment['user'].get(key)
+            # get user
+            for key in path_dict['user']:
+                new_comment['user'] = new_comment['user'].get(key)
 
-        if new_comment['user'] == None or new_comment['time'] == None or new_comment['content'] == None:
-            continue
+            if new_comment['user'] == None or new_comment['time'] == None or new_comment['content'] == None:
+                continue
 
-        # convert time to timestamp
-        if time_conversion_func != None:
-            new_comment['time'] = time_conversion_func(str(new_comment['time']), time_conversion_args)
+            # convert time to timestamp
+            if time_conversion_func != None:
+                new_comment['time'] = time_conversion_func(str(new_comment['time']), time_conversion_args)
 
-        comments_list.append(new_comment)
+            comments_list.append(new_comment)
 
     return comments_list
 
