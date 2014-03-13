@@ -1,3 +1,23 @@
-body {
-    font-family: sans-serif;
+body { 
+    font-family      : sans-serif; 
+    background-color : #f6f5ec; 
+}
+
+h1 {
+    color : #E0861A;
+}
+
+h2 {
+    color       : #005831;
+    font-family : STFangsong, STKaiti, FangSong;
+    font-weight : bold;
+}
+
+.news_title {
+    color       : #0000CD;
+    font-family : STKaiti;
+}
+
+.news_title_hover {
+    cursor : pointer;
 }
