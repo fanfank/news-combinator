@@ -1,6 +1,7 @@
 body { 
-    font-family      : sans-serif; 
     background-color : #f6f5ec; 
+    font-family      : sans-serif; 
+    font-size        : 115%;
 }
 
 h1 {
@@ -13,11 +14,34 @@ h2 {
     font-weight : bold;
 }
 
+.entry {
+    display       : inline-block;
+    margin-right  : 10px;
+    overflow      : hidden;
+    text-overflow : ellipsis;
+    white-space   : nowrap;
+    width         : 370px;
+}
+    
+.icons_block {
+    display       : inline-block;
+    width : 50px;
+}
+
+.main_content {
+    margin    : 30px 60px 30px 60px;
+}
+
 .news_title {
-    color       : #0000CD;
-    font-family : STKaiti;
+    color         : #0000CD;
+    font-family   : STKaiti;
 }
 
 .news_title_hover {
     cursor : pointer;
 }
+
+#big_block {
+    margin-left : 20px;
+}
+

@@ -7,35 +7,38 @@
             location.href = "/view/" + dest[0] + "/" + dest[1];
         });        
         $('.news_title').hover(function() {
+            $(this).attr('title', $(this).text());
             $(this).addClass('news_title_hover'); 
         });
     });
 </script>
 
 <a href = '{{ url_for('view_entry', date = 'HI', dir_name = 'Hey') }}'>Click here for test </a>
-    <ul class = entries>
+    <div id = "big_block">
     {% for entry in entries %}
-        <li><h2>{{ entry.date[:4] }}年{{ entry.date[4:6] }}月{{ entry.date[6:8] }}日新闻</h2>
-        <ul class = datedirs>
+        <div><h2>{{ entry.date[:4] }}年{{ entry.date[4:6] }}月{{ entry.date[6:8] }}日新闻</h2></div>
+        <div class = "entries_block">
         {% for news in entry.news %}
-        <li><span class="news_title" name="{{ entry.date + '.' + news.dir_name }}">{{ news.title }}</span>
-            <span class = icons>
+            <span class = "entry">
+            <span class = "icons_block">
             {% if 'tencent' in news.sources %}
-                <img src = "{{ url_for('static', filename = 'icons/tencent.png') }}" width = '15' height = '15'>
+                <img src = "{{ url_for('static', filename = 'icons/tencent.png') }}" width = '15px' height = '15px'>
             {% endif %}
             {% if 'netease' in news.sources %}
-                <img src = "{{ url_for('static', filename = 'icons/netease.png') }}" width = '15' height = '15'>
+                <img src = "{{ url_for('static', filename = 'icons/netease.png') }}" width = '15px' height = '15px'>
             {% endif %}
             {% if 'sina' in news.sources %}
-                <img src = "{{ url_for('static', filename = 'icons/sina.png') }}" width = '15' height = '15'>
+                <img src = "{{ url_for('static', filename = 'icons/sina.png') }}" width = '15px' height = '15px'>
             {% endif %}
             </span>
+            <span class="news_title" name="{{ entry.date + '.' + news.dir_name }}">{{ news.title }}</span>
+            </span>
         {% else %}
-            <li><b>No news for this day</b>
+            <b>No news for this day</b>
         {% endfor %}
-        </ul>
+        </div>
     {% else %}
-        <li><em>No news so far</em>
+        <em>No news so far</em>
     {% endfor %}
-    </ul>
+    </div>
 {% endblock %}
