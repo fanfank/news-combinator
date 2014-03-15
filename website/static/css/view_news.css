@@ -2,6 +2,72 @@ h1 {
     color: #377ba8;
 }
 
+.comment_abstract {
+    display : inline-block;
+}
+.comment_user {
+    display       : inline-block;
+    overflow      : hidden;
+    text-overflow : ellipsis;
+    white-space   : nowrap;
+    width         : 100px;
+}
+.comment_time {
+    display       : inline-block;
+    overflow      : hidden;
+    text-overflow : ellipsis;
+    white-space   : nowrap;
+    width         : 300px;
+}
+.cmt_abs_0 {
+    display : inline-block;
+}
+.cmt_abs_1 {
+    display : inline-block;
+}
+.description {
+    display : inline-block;
+}
+.element_hover {
+    cursor : pointer;
+}
+.fast_title_content {
+}
+.fast_title_block {
+    position : relative;
+    border-radius : 10px;
+    box-shadow : 10px 10px 5px #888;
+    float    : right;
+    right    : 800px;
+    boarder  : 1px #CCCCFF solid;
+    display  : inline-block;
+    z-index  : 2;
+}
+.float_banner {
+    border        : 1px #CCCCFF solid;
+    border-radius : 10px;
+    box-shadow    : 10px 10px 5px #888;
+    display       : inline-block;
+    float         : right;
+    cursor        : pointer;
+    position      : fixed;
+    right         : 10px;
+    z-index       : 2;
+}
+.inline {
+    display : inline-block;
+}
+.seperator {
+    display : inline-block;
+}
+.source_icon {
+    display : inline-block;
+}
+
+.tabcontent {
+    display: block;
+}
+
 .tabs {
     float: left;
     margin: 5px 5px;
@@ -9,7 +75,5 @@ h1 {
     border: 2px solid #009dce;
     display: inline-block;
 }
-
-.tabcontent {
-    display: block;
+.wrap_line {
 }
