@@ -43,6 +43,8 @@ def GetAbstract(sentences, tags, sentences_factor, join_character = ''):
     #print '__________________________'
 
     thresh_index = int(min((round(len(sentences)*sentences_factor), len(sentences) - 1)))
+    if thresh_index < 0 or thresh_index >= len(result):
+        return ''
     thresh = result[thresh_index].weight
     #print thresh_index, len(sentences), thresh
     ans = ['']
@@ -67,6 +69,7 @@ def GetPassageSentences(passage):
     text = passage #unicode(passage, 'utf-8')
     sentences = []
     index = 0
+    i = 0
     for i in range(0, len(text)):
         if text[i] in Sentence.segmt_list:
             sentences.append(Sentence(text[index:i+1]))

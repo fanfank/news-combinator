@@ -77,12 +77,6 @@ def show_news():
     entries = get_entries(5)
     return render_template('show_entries.html', entries = entries)
 
-"""
-@app.route('/comments')
-def get_comments():
-    return jsonify(GetComments(request.args))
-"""
-
 @app.route('/error')
 def error_page():
     error = request.args.get('errcode')
