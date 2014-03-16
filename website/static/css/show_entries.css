@@ -14,6 +14,10 @@ h2 {
     font-weight : bold;
 }
 
+.entries_block {
+    margin : 0px 10px 0px 10px;
+}
+
 .entry {
     display       : inline-block;
     margin-right  : 10px;
