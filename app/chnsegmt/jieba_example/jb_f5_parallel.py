@@ -1,0 +1,20 @@
+import urllib2
+import sys, time
+import sys
+import jieba
+
+jieba.enable_parallel()
+
+print sys.argv
+url = sys.argv[1]
+content = open(url, "rb").read()
+t1 = time.time()
+words = "\t".join(jieba.cut(content))
+
+t2 = time.time()
+tm_cost = t2-t1
+
+log_f = open("2.log", "wb")
+log_f.write(words.encode('utf-8'))
+
+print 'speed', len(content)/tm_cost, " bytes/second"
