@@ -1,0 +1,59 @@
+<?php
+require_once('phpfetcher.php');
+class news_crawler extends Phpfetcher_Crawler_Default {
+    public function handlePage($page) {
+        $arrData = $this->parseSinaNews($page);
+    }
+
+    /**
+     * @author xuruiqi
+     * @desc 解析新浪新闻
+     */
+    public function parseSinaNews($page) {
+        $strUrl = $page->getUrl();
+        $timestamp = intval(time());
+
+        //获取新闻正文
+        $arrContent = array();
+        $objContent = $page->xpath('//p/text()');
+        for ($i = 0; $i < $objContent->length; ++$i) {
+            $arrContent[] = $objContent->item($i)->nodeValue;
+        }
+
+        $matches = array();
+        preg_match('/(http://(?:\w+\.)*news\.sina\.com\.cn)/.*/(\d{4}-\d{2}-\d{2})/\d{4}(\d{8})\.(?:s)html/', $strUrl, $matches);
+
+        //获取newsId
+        preg_match('/comment_id:(\d-\d-\d+)/', $page->getContent(), $matches_news_id)
+
+        //获取channelId
+        preg_match('/comment_channel:(\w+);/', $page->getContent(), $matches_channel_id);
+
+        $arrOutput = array(
+            'news_abstract' => array(
+                'id'          => 0,
+                'title'       => $page->xpath('//h1[@id=\'artibodyTitle\']/text()')->item(0)->nodeValue,
+                'icon_pic'    => '',
+                'rate_points' => 0,
+                'rate_counts' => 0,
+                'quality'     => 0,
+                'content_id'  => 0,
+                'day_time'    => intval(implode(explode('-', $matches[2]))),
+                'timestamp'   => $timestamp,
+            ),
+            'news_content' => array(
+                'id'                  => 0, 
+                'source_name'         => 'sina',
+                'content'             => serialize($arrContent),
+                'source_news_link'    => $strUrl,
+                'source_comment_link' => "http://comment5.news.sina.com.cn/comment/skin/default.html?channel={$matches_channel_id[1]}&newsid={$matches_news_id[1]}",
+                'source_news_id'      => $matches_news_id[1],
+                'source_comment_id'   => $matches_news_id[1],
+                'abstract_id'         => 0,
+                'timestamp'           => $timestamp,
+                'ext'                 => serialize(array('channel_id' => $matches_channel_id[1])),
+            ),
+        );
+        return $arrOutput;
+    }
+}
