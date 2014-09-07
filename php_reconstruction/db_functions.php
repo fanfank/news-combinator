@@ -78,4 +78,15 @@ class Reetsee_Db {
         return $arrOutput;
     }
 
+    public function select($arrInput) {
+        //TODO
+    }
+
+    public function insert($arrInput) {
+        //TODO
+    }
+
+    public function delete($arrInput) {
+        //TODO
+    }
 }
