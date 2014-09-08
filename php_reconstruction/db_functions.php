@@ -19,7 +19,7 @@ class Reetsee_Db {
      *      string $table
      *      array  $values
      *      array  $arrExtra
-     * @desc mysql select接口
+     * @desc 数据库delete接口
      */
     public function delete($table, $conds, $arrExtra) {
         $sql = Reetsee_Sql::getSqlDelete($table, $conds, $arrExtra);
@@ -28,20 +28,6 @@ class Reetsee_Db {
             return FALSE;
         }
         return $this->query($sql);
-    }
-
-
-    protected function _fetch_all($mysqli_res, $resulttype = MYSQLI_ASSOC) {
-        $arrOutput = array();
-        if (method_exists('mysqli_result', 'fetch_all')) {
-            $arrOutput = $mysqli_res->fetch_all($resulttype);
-        } else {
-            for(;$row = $mysqli_res->fetch_array($resulttype);) {
-                $arrOutput[] = $row;
-            }
-        }
-        $mysqli_res->free();
-        return $arrOutput;
     }
 
     public function getDb($strDb, $strCharset = 'utf8', $strHost = '127.0.0.1', $intPort = 3306, $strUser = 'root', $strPassword = '123abc') {
@@ -113,7 +99,7 @@ class Reetsee_Db {
      *      array  $fields
      *      string $table
      *      array  $arrExtra
-     * @desc mysql select接口
+     * @desc 数据库insert接口
      */
     public function insert($fields, $table, $dup, $arrExtra) {
         $sql = Reetsee_Sql::getSqlInsert($fields, $table, $dup, $arrExtra);
@@ -157,7 +143,7 @@ class Reetsee_Db {
      *      string $table
      *      array  $conds
      *      array  $arrExtra
-     * @desc mysql select接口
+     * @desc 数据库select接口
      */
     public function select($fields, $table, $conds, $arrExtra) {
         $sql = Reetsee_Sql::getSqlSelect($fields, $table, $conds, $arrExtra);
@@ -175,7 +161,7 @@ class Reetsee_Db {
      *      string $table
      *      array  $conds
      *      array  $arrExtra
-     * @desc mysql select接口
+     * @desc 数据库update接口
      */
     public function update($fields, $table, $conds, $arrExtra) {
         $sql = Reetsee_Sql::getSqlUpdate($fields, $table, $conds, $arrExtra);
