@@ -1,4 +1,10 @@
 <?php
+/*
+ * @author xuruiqi
+ * @date   20140908
+ * @desc   A simple lib for DB manipulation
+ */
+require_once('sql_functions.php');
 class Reetsee_Db {
     protected $_arrCurrentConf   = array();
     protected $_arrDb            = array();

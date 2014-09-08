@@ -1,5 +1,7 @@
 <?php
-require_once('phpfetcher.php');
+require_once('phpfetcher.php'); //phpfetcher是Reetsee.Xu(即我)写的一个简单的PHP实现的爬虫框架
+                                //可以参见https://github.com/fanfank/phpfetcher
+require_once('db_functions.php'); //一个操作数据库的简易库
 class news_crawler extends Phpfetcher_Crawler_Default {
     public function handlePage($page) {
         //print_r($page->getHyperLinks());
@@ -17,6 +19,34 @@ class news_crawler extends Phpfetcher_Crawler_Default {
                 $arrData = $this->parseSinaNews($page);
                 break;
         }
+
+        $dbm = new Reetsee_Db();
+        $dbm->initDb('reetsee_news', 'utf8', '127.0.0.1', 3306, 'root', '123abc');
+        $res = $dbm->insert($arrData['news_abstract'], 'news_abstract');
+        if (!$res) {
+            $db = $dbm->getDb('reetsee_news');
+            echo $db->error . ' ' . $db->errno . "\n";
+            return FALSE;
+        }
+
+        $intLastAbsId = $dbm->getLastId();
+        $arrData['news_content']['abstract_id'] = $intLastAbsId;
+        $res = $dbm->insert($arrData['news_content'], 'news_content');
+        if (!$res) {
+            $db = $dbm->getDb('reetsee_news');
+            echo $db->error . ' ' . $db->errno . "\n";
+            return FALSE;
+        }
+
+        $intLastCtId = $dbm->getLastId();
+        $res = $dbm->update(array('content_id' => $intLastCtId), 'news_abstract', array('id' => $intLastAbsId));
+        if (!$res) {
+            $db = $dbm->getDb('reetsee_news');
+            echo $db->error . ' ' . $db->errno . "\n";
+            return FALSE;
+        }
+        
+        return TRUE;
     }
 
     /**

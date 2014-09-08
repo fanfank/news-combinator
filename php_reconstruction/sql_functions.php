@@ -1,4 +1,9 @@
 <?php
+/*
+ * @author xuruiqi
+ * @date   20140908
+ * @desc   A simple lib for sql assembling
+ */
 class Reetsee_Sql {
     const SQL_PART_SEL       = 1;
     const SQL_PART_FROM      = 2;
@@ -103,6 +108,9 @@ class Reetsee_Sql {
                 break;
 
             case self::SQL_PART_DUP: //ON DUPLICATE 模板
+                if (empty($tuples)) {
+                    $sql = '';
+                }
                 $values_sql = self::_getSqlPart($tuples, self::SQL_PART_VALUES);
                 if (FALSE === $values_sql) {
                     $sql = FALSE;
