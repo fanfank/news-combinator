@@ -1,7 +1,7 @@
 <?php
 require_once('phpfetcher.php'); //phpfetcher是Reetsee.Xu(即我)写的一个简单的PHP实现的爬虫框架
                                 //可以参见https://github.com/fanfank/phpfetcher
-require_once('db_functions.php'); //一个操作数据库的简易库
+require_once('reetsee.php'); //一个操作数据库的简易库
 class news_crawler extends Phpfetcher_Crawler_Default {
     public function handlePage($page) {
         //print_r($page->getHyperLinks());
