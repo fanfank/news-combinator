@@ -1,9 +1,11 @@
 <?php
 class Reetsee_Db {
-    protected $_arrDb = array();
-    protected $_objCurrentDb = NULL;
-    protected $_lastInsertId = NULL;
+    protected $_arrCurrentConf   = array();
+    protected $_arrDb            = array();
+    protected $_objCurrentDb     = NULL;
     protected $_lastAffectedRows = 0;
+    protected $_lastInsertId     = NULL;
+    protected $_lastSql          = '';
 
     function __destruct() {
         foreach ($this->_arrDb as $mysqli) {
@@ -11,19 +13,38 @@ class Reetsee_Db {
         }
     }
 
-    protected function _fetch_all($mysqli_res, $result_type = MYSQLI_NUM) {
+    /**
+     * @author xuruiqi
+     * @param
+     *      string $table
+     *      array  $values
+     *      array  $arrExtra
+     * @desc mysql select接口
+     */
+    public function delete($table, $conds, $arrExtra) {
+        $sql = Reetsee_Sql::getSqlDelete($table, $conds, $arrExtra);
+        if (empty($sql)) {
+            $this->log("Reetsee_Sql::getSqlDelete Failed, table=[" . serialize($table) . "], conds=[" . serialize($conds) . "], arrExtra=[" . serialize($arrExtra) . "]");
+            return FALSE;
+        }
+        return $this->query($sql);
+    }
+
+
+    protected function _fetch_all($mysqli_res, $resulttype = MYSQLI_ASSOC) {
         $arrOutput = array();
         if (method_exists('mysqli_result', 'fetch_all')) {
-            $arrOutput = $mysqli_res->fetch_all($result_type);
+            $arrOutput = $mysqli_res->fetch_all($resulttype);
         } else {
-            for(;$row = $mysqli_res->fetch_array($result_type);) {
+            for(;$row = $mysqli_res->fetch_array($resulttype);) {
                 $arrOutput[] = $row;
             }
         }
+        $mysqli_res->free();
         return $arrOutput;
     }
 
-    public function getDb($strDb, $strCharset = 'utf8', $strHost = '127.0.0.1', $intPort = 3600, $strUser = 'root', $strPassword = '123abc') {
+    public function getDb($strDb, $strCharset = 'utf8', $strHost = '127.0.0.1', $intPort = 3306, $strUser = 'root', $strPassword = '123abc') {
         //查询是否已经有连接
         if (isset($this->_arrDb[$strDb]) && $this->_arrDb[$strDb]->ping()) {
             return $this->_arrDb[$strDb];
@@ -44,6 +65,14 @@ class Reetsee_Db {
 
         $this->_arrDb[$strDb] = $mysqli;
         $this->_objCurrentDb = $this->_arrDb[$strDb];
+        $this->_arrCurrentConf = array(
+            'host'     => $strHost,
+            'port'     => $intPort,
+            'db_name'  => $strDb,    
+            'charset'  => $strCharset,
+            'user'     => '<forbidden>',
+            'password' => '<forbidden>',
+        );
         return $this->_arrDb[$strDb];
     }
 
@@ -51,7 +80,7 @@ class Reetsee_Db {
         return $this->_lastInsertId;
     }
 
-    public function initDb($strDb, $strCharset = 'utf8', $strHost = '127.0.0.1', $intPort = 3600, $strUser = 'root', $strPassword = '123abc') {
+    public function initDb($strDb, $strCharset = 'utf8', $strHost = '127.0.0.1', $intPort = 3306, $strUser = 'root', $strPassword = '123abc') {
         $mysqli = new mysqli($strHost, $strUser, $strPassword, $strDb, $intPort);
         if ($mysqli->connect_errno) {
             return FALSE;
@@ -67,26 +96,93 @@ class Reetsee_Db {
 
         $this->_arrDb[$strDb] = $mysqli;
         $this->_objCurrentDb = $this->_arrDb[$strDb];
+        $this->_arrCurrentConf = array(
+            'host'     => $strHost,
+            'port'     => $intPort,
+            'db_name'  => $strDb,    
+            'charset'  => $strCharset,
+            'user'     => '<forbidden>',
+            'password' => '<forbidden>',
+        );
         return TRUE;
     }
 
-    public function query($strSql, $mysqli = $this->_objCurrentDb) {
+    /**
+     * @author xuruiqi
+     * @param
+     *      array  $fields
+     *      string $table
+     *      array  $arrExtra
+     * @desc mysql select接口
+     */
+    public function insert($fields, $table, $dup, $arrExtra) {
+        $sql = Reetsee_Sql::getSqlInsert($fields, $table, $dup, $arrExtra);
+        if (empty($sql)) {
+            $this->log("Reetsee_Sql::getSqlInsert Failed, fields=[" . serialize($fields) . "], table=[" . serialize($table) . "], dup=[" . serialize($dup) . "], arrExtra=[" . serialize($arrExtra) . "]");
+            return FALSE;
+        }
+        return $this->query($sql);
+    }
+
+    public function query($strSql, $mysqli = $this->_objCurrentDb, $resulttype = MYSQLI_ASSOC) {
+        $strSql = strval($strSql);
+        $this->_lastSql = $strSql;
         $mysqli_res = $mysqli->query($strSql);
-        $arrOutput = $this->_fetch_all($mysqli_res, MYSQLI_NUM);
+
+        if (NULL === $mysqli_res || is_bool($mysqli_res)) {
+            $arrOutput = (TRUE === $mysqli_res) ? TRUE : FALSE;
+            if (!$arrOutput) {
+                $this->log("sql execution failed. errno=" . $mysqli->errno . ", error=" . $mysqli->error . ", sql=$strSql, conf=[" . serialize($this->_arrCurrentConf) . "]");
+            }
+        } else {
+            if (method_exists('mysqli_result', 'fetch_all')) {
+                $arrOutput = $mysqli_res->fetch_all($resulttype);
+            } else {
+                for(;$row = $mysqli_res->fetch_array($resulttype);) {
+                    $arrOutput[] = $row;
+                }
+            }
+            $mysqli_res->free();
+        }
+        
         $this->_lastInsertId = $mysqli->insert_id;
         $this->_lastAffectedRows = $mysqli->affected_rows;
         return $arrOutput;
     }
 
-    public function select($arrInput) {
-        //TODO
+    /**
+     * @author xuruiqi
+     * @param
+     *      array  $fields 
+     *      string $table
+     *      array  $conds
+     *      array  $arrExtra
+     * @desc mysql select接口
+     */
+    public function select($fields, $table, $conds, $arrExtra) {
+        $sql = Reetsee_Sql::getSqlSelect($fields, $table, $conds, $arrExtra);
+        if (empty($sql)) {
+            $this->log("Reetsee_Sql::getSqlSelect Failed, fields=[" . serialize($fields) . "], table=[" . serialize($table) . "], conds=[" . serialize($conds) . "], arrExtra=[" . serialize($arrExtra) . "]");
+            return FALSE;
+        }
+        return $this->query($sql);
     }
 
-    public function insert($arrInput) {
-        //TODO
-    }
-
-    public function delete($arrInput) {
-        //TODO
+    /**
+     * @author xuruiqi
+     * @param
+     *      array  $fields
+     *      string $table
+     *      array  $conds
+     *      array  $arrExtra
+     * @desc mysql select接口
+     */
+    public function update($fields, $table, $conds, $arrExtra) {
+        $sql = Reetsee_Sql::getSqlUpdate($fields, $table, $conds, $arrExtra);
+        if (empty($sql)) {
+            $this->log("Reetsee_Sql::getSqlUpdate Failed, fields=[" . serialize($fields) . "], table=[" . serialize($table) . "], conds=[" . serialize($conds) . "], arrExtra=[" . serialize($arrExtra) . "]");
+            return FALSE;
+        }
+        return $this->query($sql);
     }
 }
