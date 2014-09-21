@@ -11,8 +11,10 @@ class Reetsee_Db_Sql {
     const SQL_PART_UPDATE    = 4;
     const SQL_PART_VALUES    = 5; 
     const SQL_PART_DUP       = 6;
+    const SQL_PART_INSERT    = 7;
+    const SQL_PART_INSERT_VALUES = 8;
 
-    public static function getSqlDelete($table, $conds, $arrExtra) {
+    public static function getSqlDelete($table, $conds, $arrExtra = NULL) {
         $arrSql   = array();
         $arrSql[] = self::_getSqlPart($table, self::SQL_PART_DEL);
         $arrSql[] = self::_getSqlPart($conds, self::SQL_PART_WHERE_AND);
@@ -24,10 +26,10 @@ class Reetsee_Db_Sql {
         return implode(' ', $arrSql);
     }
 
-    public static function getSqlInsert($fields, $table, $dup, $arrExtra) {
+    public static function getSqlInsert($fields, $table, $dup = NULL, $arrExtra = NULL) {
         $arrSql   = array();
         $arrSql[] = self::_getSqlPart($table , self::SQL_PART_INSERT);
-        $arrSql[] = self::_getSqlPart($fields, self::SQL_PART_VALUES);
+        $arrSql[] = self::_getSqlPart($fields, self::SQL_PART_INSERT_VALUES);
         $arrSql[] = self::_getSqlPart($dup   , self::SQL_PART_DUP);
         foreach ($arrSql as $sql_part) {
             if (FALSE === $sql_part) {
@@ -38,6 +40,10 @@ class Reetsee_Db_Sql {
     }
 
     protected static function _getSqlPart($tuples, $tuples_type) {
+        if (empty($tuples)) {
+            return '';
+        }
+
         $sql = '';
         switch ($tuples_type) {
             case self::SQL_PART_SEL: //SELECT 模板
@@ -76,7 +82,7 @@ class Reetsee_Db_Sql {
                 foreach ($tuples as $field => $value) {
                     $field = mysql_escape_string($field);
                     $value = mysql_escape_string($value);
-                    $arrAndConds[] = "`$field`=\'$value\'";
+                    $arrAndConds[] = "`$field`='$value'";
                 }
                 $sql .= implode(' AND ', $arrAndConds);
                 break;
@@ -102,7 +108,7 @@ class Reetsee_Db_Sql {
                 foreach ($tuples as $field => $value) {
                     $field = mysql_escape_string($field);
                     $value = mysql_escape_string($value);
-                    $arrKeyValues[] = "`$field`=\'$value\'";
+                    $arrKeyValues[] = "`$field`='$value'";
                 }
                 $sql .= implode(', ', $arrKeyValues);
                 break;
@@ -118,6 +124,31 @@ class Reetsee_Db_Sql {
                 }
 
                 $sql = "ON DUPLICATE KEY UPDATE $values_sql";
+                break;
+
+            case self::SQL_PART_INSERT: //INSERT 模板
+                if (!is_string($tuples) || empty($tuples)) {
+                    return FALSE;
+                }
+                $sql .= "INSERT INTO $tuples";
+                break;
+
+            case self::SQL_PART_INSERT_VALUES: //INSERT VALUES 模板
+                if (!is_array($tuples) || empty($tuples)) {
+                    return FALSE;
+                }
+
+                $sql .= "";
+                $arrFields = array();
+                $arrValues = array();
+                foreach ($tuples as $field => $value) {
+                    $field = mysql_escape_string($field);
+                    $value = mysql_escape_string($value);
+                    $arrFields[] = "`$field`";
+                    $arrValues[] = "'$value'";
+                }
+                $sql .= '(' . implode(',', $arrFields) . ') VALUES (' . implode(',', $arrValues) . ')';
+
                 break;
 
             default:

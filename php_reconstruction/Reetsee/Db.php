@@ -106,7 +106,7 @@ class Reetsee_Db {
      *      array  $arrExtra
      * @desc 数据库insert接口
      */
-    public function insert($fields, $table, $dup, $arrExtra) {
+    public function insert($fields, $table, $dup = NULL, $arrExtra = NULL) {
         $sql = Reetsee_Db_Sql::getSqlInsert($fields, $table, $dup, $arrExtra);
         if (empty($sql)) {
             $this->log("Reetsee_Db_Sql::getSqlInsert Failed, fields=[" . serialize($fields) . "], table=[" . serialize($table) . "], dup=[" . serialize($dup) . "], arrExtra=[" . serialize($arrExtra) . "]");
@@ -115,7 +115,15 @@ class Reetsee_Db {
         return $this->query($sql);
     }
 
-    public function query($strSql, $mysqli = $this->_objCurrentDb, $resulttype = MYSQLI_ASSOC) {
+    protected function log($log) {
+        echo $log;
+    }
+
+    public function query($strSql, $mysqli = NULL, $resulttype = MYSQLI_ASSOC) {
+        if (NULL === $mysqli) {
+            $mysqli = $this->_objCurrentDb;
+        }
+
         $strSql = strval($strSql);
         $this->_lastSql = $strSql;
         $mysqli_res = $mysqli->query($strSql);
@@ -150,7 +158,7 @@ class Reetsee_Db {
      *      array  $arrExtra
      * @desc 数据库select接口
      */
-    public function select($fields, $table, $conds, $arrExtra) {
+    public function select($fields, $table, $conds, $arrExtra = NULL) {
         $sql = Reetsee_Db_Sql::getSqlSelect($fields, $table, $conds, $arrExtra);
         if (empty($sql)) {
             $this->log("Reetsee_Db_Sql::getSqlSelect Failed, fields=[" . serialize($fields) . "], table=[" . serialize($table) . "], conds=[" . serialize($conds) . "], arrExtra=[" . serialize($arrExtra) . "]");
@@ -168,7 +176,7 @@ class Reetsee_Db {
      *      array  $arrExtra
      * @desc 数据库update接口
      */
-    public function update($fields, $table, $conds, $arrExtra) {
+    public function update($fields, $table, $conds, $arrExtra = NULL) {
         $sql = Reetsee_Db_Sql::getSqlUpdate($fields, $table, $conds, $arrExtra);
         if (empty($sql)) {
             $this->log("Reetsee_Db_Sql::getSqlUpdate Failed, fields=[" . serialize($fields) . "], table=[" . serialize($table) . "], conds=[" . serialize($conds) . "], arrExtra=[" . serialize($arrExtra) . "]");

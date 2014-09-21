@@ -82,7 +82,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         $arrOutput = array(
             'news_abstract' => array(
                 'id'          => 0,
-                'title'       => $page->sel('//h1')->plaintext,
+                'title'       => $page->sel('//h1', 0)->plaintext,
                 'icon_pic'    => '',
                 'rate_points' => 0,
                 'rate_counts' => 0,
@@ -135,7 +135,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         $arrOutput = array(
             'news_abstract' => array(
                 'id'          => 0,
-                'title'       => $page->sel('//h1[@id=\'h1title]\'')->plaintext,
+                'title'       => $page->sel('//h1[@id=\'h1title]\'', 0)->plaintext,
                 'icon_pic'    => '',
                 'rate_points' => 0,
                 'rate_counts' => 0,
@@ -192,7 +192,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         $arrOutput = array(
             'news_abstract' => array(
                 'id'          => 0,
-                'title'       => $page->sel('//h1[@id=\'artibodyTitle\']')->plaintext,
+                'title'       => $page->sel('//h1[@id=\'artibodyTitle\']', 0)->plaintext,
                 'icon_pic'    => '',
                 'rate_points' => 0,
                 'rate_counts' => 0,

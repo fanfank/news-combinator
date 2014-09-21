@@ -9,6 +9,5 @@ CREATE TABLE `news_abstract` (
     `content_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '新闻详细内容ID',
     `day_time` int(11) UNSIGNED NOT NULL DEFAULT 19700101 COMMENT '日期格式为：YYYYmmdd',
     `timestamp` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '时间戳',
-    UNIQUE KEY `cid` (`content_id`),
     INDEX  `dt` (`day_time`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='用于保存新闻摘要信息';
