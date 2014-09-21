@@ -20,12 +20,16 @@ class news_crawler extends Phpfetcher_Crawler_Default {
                 break;
         }
 
+        if (empty($arrData)) {
+            return TRUE;
+        }
+
         $dbm = new Reetsee_Db();
         $dbm->initDb('reetsee_news', 'utf8', '127.0.0.1', 3306, 'root', '123abc');
         $res = $dbm->insert($arrData['news_abstract'], 'news_abstract');
         if (!$res) {
             $db = $dbm->getDb('reetsee_news');
-            echo $db->error . ' ' . $db->errno . "\n";
+            echo 'Insert abstract error:' . $db->error . ' ' . $db->errno . "\n";
             return FALSE;
         }
 
@@ -34,7 +38,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         $res = $dbm->insert($arrData['news_content'], 'news_content');
         if (!$res) {
             $db = $dbm->getDb('reetsee_news');
-            echo $db->error . ' ' . $db->errno . "\n";
+            echo 'Insert content error:' . $db->error . ' ' . $db->errno . "\n";
             return FALSE;
         }
 
@@ -42,7 +46,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         $res = $dbm->update(array('content_id' => $intLastCtId), 'news_abstract', array('id' => $intLastAbsId));
         if (!$res) {
             $db = $dbm->getDb('reetsee_news');
-            echo $db->error . ' ' . $db->errno . "\n";
+            echo 'Update abstract error:' . $db->error . ' ' . $db->errno . "\n";
             return FALSE;
         }
         
@@ -64,10 +68,21 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         }
 
         $matches = array();
-        preg_match('/(.*)\/a\/(\d{8})\/(\d+)\.htm/', $strUrl, $matches);
+        $intRes = preg_match('/(.*)\/a\/(\d{8})\/(\d+)\.htm/', $strUrl, $matches);
+
+        if (FALSE === $intRes || 0 === $intRes) {
+            return array();
+        }
+
+        echo "Checking $strUrl ...\n";
 
         //获取评论id
         preg_match('/cmt_id = (.*);/', $page->getContent(), $matches_comment_id);
+
+//var_dump($page->getContent());
+$res = $page->xpath('//p')->item(0)->nodeValue;
+var_dump($res);
+die(0);
 
         $arrOutput = array(
             'news_abstract' => array(
@@ -112,7 +127,12 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         }
 
         $matches = array();
-        preg_match('/(http://news\.163\.com)/(\d{2})/(\d{4})/\d+/(\w+)\.html/', $strUrl, $matches);
+        $intRes = preg_match('/(http:\/\/news\.163\.com)\/(\d{2})\/(\d{4})\/\d+\/(\w+)\.html/', $strUrl, $matches);
+        if (FALSE === $intRes || 0 === $intRes) {
+            return array();
+        }
+
+        echo "Checking $strUrl ...\n";
 
         //获取boardId
         preg_match('/boardId = "(.*)"/', $page->getContent(), $matches_board_id);
@@ -161,7 +181,12 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         }
 
         $matches = array();
-        preg_match('/(http://(?:\w+\.)*news\.sina\.com\.cn)/.*/(\d{4}-\d{2}-\d{2})/\d{4}(\d{8})\.(?:s)html/', $strUrl, $matches);
+        $intRes = preg_match('/(http:\/\/(?:\w+\.)*news\.sina\.com\.cn)\/.*\/(\d{4}-\d{2}-\d{2})\/\d{4}(\d{8})\.(?:s)html/', $strUrl, $matches);
+        if (FALSE === $intRes || 0 === $intRes) {
+            return array();
+        }
+
+        echo "Checking $strUrl ...\n";
 
         //获取newsId
         preg_match('/comment_id:(\d-\d-\d+)/', $page->getContent(), $matches_news_id);
@@ -210,18 +235,19 @@ $arrFetchJobs = array(
     'netease' => array(
         'start_page' => 'http://news.163.com', 
         'link_rules' => array(
-            '/(http://news\.163\.com)/(\d{2})/(\d{4})/\d+/(\w+)\.html/', 
+            '/(http:\/\/news\.163\.com)\/(\d{2})\/(\d{4})\/\d+\/(\w+)\.html/', 
         ),
         'max_depth' => 4, 
     ),        
     'sina' => array(
         'start_page' => 'http://news.sina.com.cn',   
         'link_rules' => array(
-            '/(http://(?:\w+\.)*news\.sina\.com\.cn)/.*/(\d{4}-\d{2}-\d{2})/\d{4}(\d{8})\.(?:s)html/'    
+            '/(http:\/\/(?:\w+\.)*news\.sina\.com\.cn)\/.*\/(\d{4}-\d{2}-\d{2})\/\d{4}(\d{8})\.(?:s)html/'    
         ),
         'max_depth' => 4, 
     ),
 );
 $crawler->setFetchJobs($arrFetchJobs)->run();
 
+echo "DONE\n";
 ?>
