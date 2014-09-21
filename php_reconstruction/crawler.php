@@ -164,7 +164,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         preg_match('/(http://(?:\w+\.)*news\.sina\.com\.cn)/.*/(\d{4}-\d{2}-\d{2})/\d{4}(\d{8})\.(?:s)html/', $strUrl, $matches);
 
         //获取newsId
-        preg_match('/comment_id:(\d-\d-\d+)/', $page->getContent(), $matches_news_id)
+        preg_match('/comment_id:(\d-\d-\d+)/', $page->getContent(), $matches_news_id);
 
         //获取channelId
         preg_match('/comment_channel:(\w+);/', $page->getContent(), $matches_channel_id);
