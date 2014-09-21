@@ -62,9 +62,9 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         $timestamp = intval(time());
 
         $arrContent = array();
-        $objContent = $page->xpath('//p/text()');
-        for ($i = 0; $i < $objContent->length; ++$i) {
-            $arrContent[] = $objContent->item($i)->nodeValue;
+        $objContent = $page->sel('//p');
+        for ($i = 0; $i < count($objContent); ++$i) {
+            $arrContent[] = $objContent[$i]->plaintext;
         }
 
         $matches = array();
@@ -79,15 +79,10 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         //获取评论id
         preg_match('/cmt_id = (.*);/', $page->getContent(), $matches_comment_id);
 
-//var_dump($page->getContent());
-$res = $page->xpath('//p')->item(0)->nodeValue;
-var_dump($res);
-die(0);
-
         $arrOutput = array(
             'news_abstract' => array(
                 'id'          => 0,
-                'title'       => $page->xpath('//h1/text()')->item(0)->nodeValue,
+                'title'       => $page->sel('//h1')->plaintext,
                 'icon_pic'    => '',
                 'rate_points' => 0,
                 'rate_counts' => 0,
@@ -121,9 +116,9 @@ die(0);
         $timestamp = intval(time());
 
         $arrContent = array();
-        $objContent = $page->xpath('//p/text()');
-        for ($i = 0; $i < $objContent->length; ++$i) {
-            $arrContent[] = $objContent->item($i)->nodeValue;
+        $objContent = $page->sel('//p');
+        for ($i = 0; $i < count($objContent); ++$i) {
+            $arrContent[] = $objContent[$i]->plaintext;
         }
 
         $matches = array();
@@ -140,7 +135,7 @@ die(0);
         $arrOutput = array(
             'news_abstract' => array(
                 'id'          => 0,
-                'title'       => $page->xpath('//h1[@id=\'h1title]\'/text()')->item(0)->nodeValue,
+                'title'       => $page->sel('//h1[@id=\'h1title]\'')->plaintext,
                 'icon_pic'    => '',
                 'rate_points' => 0,
                 'rate_counts' => 0,
@@ -175,9 +170,9 @@ die(0);
 
         //获取新闻正文
         $arrContent = array();
-        $objContent = $page->xpath('//p/text()');
+        $objContent = $page->sel('//p');
         for ($i = 0; $i < $objContent->length; ++$i) {
-            $arrContent[] = $objContent->item($i)->nodeValue;
+            $arrContent[] = $objContent[$i]->plaintext;
         }
 
         $matches = array();
@@ -197,7 +192,7 @@ die(0);
         $arrOutput = array(
             'news_abstract' => array(
                 'id'          => 0,
-                'title'       => $page->xpath('//h1[@id=\'artibodyTitle\']/text()')->item(0)->nodeValue,
+                'title'       => $page->sel('//h1[@id=\'artibodyTitle\']')->plaintext,
                 'icon_pic'    => '',
                 'rate_points' => 0,
                 'rate_counts' => 0,
