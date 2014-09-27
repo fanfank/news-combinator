@@ -20,7 +20,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
                 break;
         }
 
-        if (empty($arrData)) {
+        if (!$this->checkData($arrData)) {
             return TRUE;
         }
 
@@ -216,6 +216,13 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         );
         return $arrOutput;
     }
+
+    public function checkData($arrData) {
+        if (empty($arrData['news_abstract']['title']) || empty($arrData['news_content']['content'])) {
+            return false;
+        }
+        return true;
+    }
 }
 
 $crawler = new news_crawler();
@@ -223,23 +230,23 @@ $arrFetchJobs = array(
     'tencent' => array(
         'start_page' => 'http://news.qq.com',   
         'link_rules' => array(
-            '#(.*)/a/(\d{8})/(\d+)\.htm#'
+            '#(.*)/a/(\d{8})/(\d+)\.htm$#'
         ),
-        'max_depth' => 1, 
+        'max_depth' => 2, 
     ),
     'netease' => array(
         'start_page' => 'http://news.163.com', 
         'link_rules' => array(
-            '#(http://news\.163\.com)/(\d{2})/(\d{4})/\d+/(\w+)\.html#',
+            '#(http://news\.163\.com)/(\d{2})/(\d{4})/\d+/(\w+)\.html$#',
         ),
-        'max_depth' => 1, 
+        'max_depth' => 2, 
     ),        
     'sina' => array(
         'start_page' => 'http://news.sina.com.cn',   
         'link_rules' => array(
-            '#(http://(?:\w+\.)*news\.sina\.com\.cn)/.*/(\d{4}-\d{2}-\d{2})/\d{4}(\d{8})\.(?:s)html#',
+            '#(http://(?:\w+\.)*news\.sina\.com\.cn)/.*/(\d{4}-\d{2}-\d{2})/\d{4}(\d{8})\.(?:s)html$#',
         ),
-        'max_depth' => 1, 
+        'max_depth' => 2, 
     ),
 );
 $crawler->setFetchJobs($arrFetchJobs)->run();
