@@ -60,6 +60,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
     public function parseTencentNews($page) {
         $strUrl = $page->getUrl();
         $timestamp = intval(time());
+        echo "Checking $strUrl ...\n";
 
         $arrContent = array();
         $objContent = $page->sel('//p');
@@ -74,7 +75,6 @@ class news_crawler extends Phpfetcher_Crawler_Default {
             return array();
         }
 
-        echo "Checking $strUrl ...\n";
 
         //获取评论id
         preg_match('#cmt_id = (.*);#', $page->getContent(), $matches_comment_id);
@@ -82,7 +82,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         $arrOutput = array(
             'news_abstract' => array(
                 'id'          => 0,
-                'title'       => $page->sel('//h1', 0)->plaintext,
+                'title'       => trim($page->sel('//h1', 0)->plaintext),
                 'icon_pic'    => '',
                 'rate_points' => 0,
                 'rate_counts' => 0,
@@ -90,6 +90,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
                 'content_id'  => 0,
                 'day_time'    => intval($matches[2]),
                 'timestamp'   => $timestamp,
+                'source_news_id'      => strval($matches[3]),
             ),
             'news_content' => array(
                 'id'                  => 0, 
@@ -114,6 +115,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
     public function parseNeteaseNews($page) {
         $strUrl = $page->getUrl();
         $timestamp = intval(time());
+        echo "Checking $strUrl ...\n";
 
         $arrContent = array();
         $objContent = $page->sel('//p');
@@ -127,7 +129,6 @@ class news_crawler extends Phpfetcher_Crawler_Default {
             return array();
         }
 
-        echo "Checking $strUrl ...\n";
 
         //获取boardId
         preg_match('#boardId = "(.*)"#', $page->getContent(), $matches_board_id);
@@ -135,7 +136,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         $arrOutput = array(
             'news_abstract' => array(
                 'id'          => 0,
-                'title'       => $page->sel('//h1[@id=\'h1title]\'', 0)->plaintext,
+                'title'       => trim($page->sel('//h1[@id=\'h1title\']', 0)->plaintext),
                 'icon_pic'    => '',
                 'rate_points' => 0,
                 'rate_counts' => 0,
@@ -143,6 +144,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
                 'content_id'  => 0,
                 'day_time'    => intval("20{$matches[2]}{$matches[3]}"),
                 'timestamp'   => $timestamp,
+                'source_news_id'      => strval($matches[4]),
             ),
             'news_content' => array(
                 'id'                  => 0, 
@@ -167,11 +169,12 @@ class news_crawler extends Phpfetcher_Crawler_Default {
     public function parseSinaNews($page) {
         $strUrl = $page->getUrl();
         $timestamp = intval(time());
+        echo "Checking $strUrl ...\n";
 
         //获取新闻正文
         $arrContent = array();
         $objContent = $page->sel('//p');
-        for ($i = 0; $i < $objContent->length; ++$i) {
+        for ($i = 0; $i < count($objContent); ++$i) {
             $arrContent[] = $objContent[$i]->plaintext;
         }
 
@@ -181,7 +184,6 @@ class news_crawler extends Phpfetcher_Crawler_Default {
             return array();
         }
 
-        echo "Checking $strUrl ...\n";
 
         //获取newsId
         preg_match('#comment_id:(\d-\d-\d+)#', $page->getContent(), $matches_news_id);
@@ -192,7 +194,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         $arrOutput = array(
             'news_abstract' => array(
                 'id'          => 0,
-                'title'       => $page->sel('//h1[@id=\'artibodyTitle\']', 0)->plaintext,
+                'title'       => trim($page->sel('//h1[@id=\'artibodyTitle\']', 0)->plaintext),
                 'icon_pic'    => '',
                 'rate_points' => 0,
                 'rate_counts' => 0,
@@ -200,6 +202,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
                 'content_id'  => 0,
                 'day_time'    => intval(implode(explode('-', $matches[2]))),
                 'timestamp'   => $timestamp,
+                'source_news_id'      => $matches_news_id[1],
             ),
             'news_content' => array(
                 'id'                  => 0, 
@@ -246,7 +249,7 @@ $arrFetchJobs = array(
         'link_rules' => array(
             '#(http://(?:\w+\.)*news\.sina\.com\.cn)/.*/(\d{4}-\d{2}-\d{2})/\d{4}(\d{8})\.(?:s)html$#',
         ),
-        'max_depth' => 2, 
+        'max_depth' => 1, 
     ),
 );
 $crawler->setFetchJobs($arrFetchJobs)->run();

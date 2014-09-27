@@ -10,5 +10,6 @@ CREATE TABLE `news_content` (
     `abstract_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '新闻摘要内容对应的id值',
     `timestamp` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '时间戳',
     `ext` varchar(2048) DEFAULT '' COMMENT '扩展字段',
-    UNIQUE KEY `aid` (`abstract_id`)
+    UNIQUE KEY `aid` (`abstract_id`),
+    UNIQUE KEY `snid` (`source_news_id`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='用于保存新闻相关详细信息';
