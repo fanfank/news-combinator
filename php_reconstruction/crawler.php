@@ -249,7 +249,7 @@ $arrFetchJobs = array(
         'link_rules' => array(
             '#(http://(?:\w+\.)*news\.sina\.com\.cn)/.*/(\d{4}-\d{2}-\d{2})/\d{4}(\d{8})\.(?:s)html$#',
         ),
-        'max_depth' => 1, 
+        'max_depth' => 2, 
     ),
 );
 $crawler->setFetchJobs($arrFetchJobs)->run();
