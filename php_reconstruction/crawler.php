@@ -68,7 +68,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         }
 
         $matches = array();
-        $intRes = preg_match('/(.*)\/a\/(\d{8})\/(\d+)\.htm/', $strUrl, $matches);
+        $intRes = preg_match('#(.*)/a/(\d{8})/(\d+)\.htm#', $strUrl, $matches);
 
         if (FALSE === $intRes || 0 === $intRes) {
             return array();
@@ -77,7 +77,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         echo "Checking $strUrl ...\n";
 
         //获取评论id
-        preg_match('/cmt_id = (.*);/', $page->getContent(), $matches_comment_id);
+        preg_match('#cmt_id = (.*);#', $page->getContent(), $matches_comment_id);
 
         $arrOutput = array(
             'news_abstract' => array(
@@ -122,7 +122,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         }
 
         $matches = array();
-        $intRes = preg_match('/(http:\/\/news\.163\.com)\/(\d{2})\/(\d{4})\/\d+\/(\w+)\.html/', $strUrl, $matches);
+        $intRes = preg_match('#(http://news\.163\.com)/(\d{2})/(\d{4})/\d+/(\w+)\.html#', $strUrl, $matches);
         if (FALSE === $intRes || 0 === $intRes) {
             return array();
         }
@@ -130,7 +130,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         echo "Checking $strUrl ...\n";
 
         //获取boardId
-        preg_match('/boardId = "(.*)"/', $page->getContent(), $matches_board_id);
+        preg_match('#boardId = "(.*)"#', $page->getContent(), $matches_board_id);
 
         $arrOutput = array(
             'news_abstract' => array(
@@ -176,7 +176,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         }
 
         $matches = array();
-        $intRes = preg_match('/(http:\/\/(?:\w+\.)*news\.sina\.com\.cn)\/.*\/(\d{4}-\d{2}-\d{2})\/\d{4}(\d{8})\.(?:s)html/', $strUrl, $matches);
+        $intRes = preg_match('#(http://(?:\w+\.)*news\.sina\.com\.cn)/.*/(\d{4}-\d{2}-\d{2})/\d{4}(\d{8})\.(?:s)html#', $strUrl, $matches);
         if (FALSE === $intRes || 0 === $intRes) {
             return array();
         }
@@ -184,10 +184,10 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         echo "Checking $strUrl ...\n";
 
         //获取newsId
-        preg_match('/comment_id:(\d-\d-\d+)/', $page->getContent(), $matches_news_id);
+        preg_match('#comment_id:(\d-\d-\d+)#', $page->getContent(), $matches_news_id);
 
         //获取channelId
-        preg_match('/comment_channel:(\w+);/', $page->getContent(), $matches_channel_id);
+        preg_match('#comment_channel:(\w+);#', $page->getContent(), $matches_channel_id);
 
         $arrOutput = array(
             'news_abstract' => array(
@@ -223,23 +223,23 @@ $arrFetchJobs = array(
     'tencent' => array(
         'start_page' => 'http://news.qq.com',   
         'link_rules' => array(
-            '/(.*)\/a\/(\d{8})\/(\d+)\.htm/',    
+            '#(.*)/a/(\d{8})/(\d+)\.htm#'
         ),
-        'max_depth' => 4, 
+        'max_depth' => 1, 
     ),
     'netease' => array(
         'start_page' => 'http://news.163.com', 
         'link_rules' => array(
-            '/(http:\/\/news\.163\.com)\/(\d{2})\/(\d{4})\/\d+\/(\w+)\.html/', 
+            '#(http://news\.163\.com)/(\d{2})/(\d{4})/\d+/(\w+)\.html#',
         ),
-        'max_depth' => 4, 
+        'max_depth' => 1, 
     ),        
     'sina' => array(
         'start_page' => 'http://news.sina.com.cn',   
         'link_rules' => array(
-            '/(http:\/\/(?:\w+\.)*news\.sina\.com\.cn)\/.*\/(\d{4}-\d{2}-\d{2})\/\d{4}(\d{8})\.(?:s)html/'    
+            '#(http://(?:\w+\.)*news\.sina\.com\.cn)/.*/(\d{4}-\d{2}-\d{2})/\d{4}(\d{8})\.(?:s)html#',
         ),
-        'max_depth' => 4, 
+        'max_depth' => 1, 
     ),
 );
 $crawler->setFetchJobs($arrFetchJobs)->run();
