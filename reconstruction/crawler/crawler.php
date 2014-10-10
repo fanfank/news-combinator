@@ -62,10 +62,12 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         $timestamp = intval(time());
         echo "Checking $strUrl ...\n";
 
-        $arrContent = array();
+        //$arrContent = array();
+        $strContent = "";
         $objContent = $page->sel('//p');
         for ($i = 0; $i < count($objContent); ++$i) {
-            $arrContent[] = $objContent[$i]->plaintext;
+            //$arrContent[] = $objContent[$i]->plaintext;
+            $strContent .= ($objContent[$i]->plaintext . "\n");
         }
 
         $matches = array();
@@ -95,7 +97,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
             'news_content' => array(
                 'id'                  => 0, 
                 'source_name'         => 'tencent',
-                'content'             => serialize($arrContent),
+                'content'             => trim($strContent),
                 'source_news_link'    => $strUrl,
                 'source_comment_link' => "http://coral.qq.com/{$matches_comment_id[1]}",
                 'source_news_id'      => strval($matches[3]),
@@ -117,10 +119,12 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         $timestamp = intval(time());
         echo "Checking $strUrl ...\n";
 
-        $arrContent = array();
+        //$arrContent = array();
+        $strContent = "";
         $objContent = $page->sel('//p');
         for ($i = 0; $i < count($objContent); ++$i) {
-            $arrContent[] = $objContent[$i]->plaintext;
+            //$arrContent[] = $objContent[$i]->plaintext;
+            $strContent .= ($objContent[$i]->plaintext . "\n");
         }
 
         $matches = array();
@@ -149,7 +153,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
             'news_content' => array(
                 'id'                  => 0, 
                 'source_name'         => 'netease',
-                'content'             => serialize($arrContent),
+                'content'             => trim($strContent),
                 'source_news_link'    => $strUrl,
                 'source_comment_link' => "http://comment.news.163.com/{$matches_board_id[1]}/{$matches[4]}.html",
                 'source_news_id'      => strval($matches[4]),
@@ -172,10 +176,11 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         echo "Checking $strUrl ...\n";
 
         //获取新闻正文
-        $arrContent = array();
+        //$arrContent = array();
         $objContent = $page->sel('//p');
         for ($i = 0; $i < count($objContent); ++$i) {
-            $arrContent[] = $objContent[$i]->plaintext;
+            //$arrContent[] = $objContent[$i]->plaintext;
+            $strContent .= ($objContent[$i]->plaintext . "\n");
         }
 
         $matches = array();
@@ -207,7 +212,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
             'news_content' => array(
                 'id'                  => 0, 
                 'source_name'         => 'sina',
-                'content'             => serialize($arrContent),
+                'content'             => trim($strContent),
                 'source_news_link'    => $strUrl,
                 'source_comment_link' => "http://comment5.news.sina.com.cn/comment/skin/default.html?channel={$matches_channel_id[1]}&newsid={$matches_news_id[1]}",
                 'source_news_id'      => $matches_news_id[1],

@@ -13,7 +13,7 @@ using namespace CppJieba;
 const char * const dict_path =  "../dict/jieba.dict.utf8";
 const char * const model_path = "../dict/hmm_model.utf8";
 
-const char * const test_lines = "我来到南京市长江大桥";
+const char * const test_lines = "我来到南京市长江大桥\n哈哈呀";
 
 int main(int argc, char ** argv)
 {
