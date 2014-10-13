@@ -81,10 +81,11 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         //获取评论id
         preg_match('#cmt_id = (.*);#', $page->getContent(), $matches_comment_id);
 
+        $strTitle = trim($page->sel('//h1', 0)->plaintext);
         $arrOutput = array(
             'news_abstract' => array(
                 'id'          => 0,
-                'title'       => trim($page->sel('//h1', 0)->plaintext),
+                'title'       => $strTitle,
                 'icon_pic'    => '',
                 'rate_points' => 0,
                 'rate_counts' => 0,
@@ -96,6 +97,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
             ),
             'news_content' => array(
                 'id'                  => 0, 
+                'title'               => $strTitle,
                 'source_name'         => 'tencent',
                 'content'             => trim($strContent),
                 'source_news_link'    => $strUrl,
@@ -137,10 +139,11 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         //获取boardId
         preg_match('#boardId = "(.*)"#', $page->getContent(), $matches_board_id);
 
+        $strTitle = trim($page->sel('//h1[@id=\'h1title\']', 0)->plaintext);
         $arrOutput = array(
             'news_abstract' => array(
                 'id'          => 0,
-                'title'       => trim($page->sel('//h1[@id=\'h1title\']', 0)->plaintext),
+                'title'       => $strTitle,
                 'icon_pic'    => '',
                 'rate_points' => 0,
                 'rate_counts' => 0,
@@ -152,6 +155,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
             ),
             'news_content' => array(
                 'id'                  => 0, 
+                'title'               => $strTitle,
                 'source_name'         => 'netease',
                 'content'             => trim($strContent),
                 'source_news_link'    => $strUrl,
@@ -177,6 +181,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
 
         //获取新闻正文
         //$arrContent = array();
+        $strContent = "";
         $objContent = $page->sel('//p');
         for ($i = 0; $i < count($objContent); ++$i) {
             //$arrContent[] = $objContent[$i]->plaintext;
@@ -196,10 +201,11 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         //获取channelId
         preg_match('#comment_channel:(\w+);#', $page->getContent(), $matches_channel_id);
 
+        $strTitle = trim($page->sel('//h1[@id=\'artibodyTitle\']', 0)->plaintext);
         $arrOutput = array(
             'news_abstract' => array(
                 'id'          => 0,
-                'title'       => trim($page->sel('//h1[@id=\'artibodyTitle\']', 0)->plaintext),
+                'title'       => $strTitle,
                 'icon_pic'    => '',
                 'rate_points' => 0,
                 'rate_counts' => 0,
@@ -211,6 +217,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
             ),
             'news_content' => array(
                 'id'                  => 0, 
+                'title'               => $strTitle,
                 'source_name'         => 'sina',
                 'content'             => trim($strContent),
                 'source_news_link'    => $strUrl,
