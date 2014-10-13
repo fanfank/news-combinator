@@ -1,6 +1,7 @@
 USE `reetsee_news`;
 CREATE TABLE `news_content` (
     `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY COMMENT '自增主键',
+    `title` varchar(128) NOT NULL DEFAULT '' COMMENT '新闻标题',
     `source_name` varchar(32) NOT NULL DEFAULT '' COMMENT '新闻来源',
     `content` text NOT NULL COMMENT '新闻详细内容',
     `source_news_link` varchar(1024) NOT NULL DEFAULT 'http://blog.reetsee.com/404' COMMENT '文章链接',
