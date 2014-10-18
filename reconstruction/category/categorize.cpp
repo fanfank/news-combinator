@@ -136,6 +136,8 @@ int main(int argc, char *argv[]) {
 
         //insert new entries
         fprintf(query, "INSERT INTO `news_category` (`title`, `source_names`, `day_time`, `preview_pic`, `abstract_ids`) VALUES ('%s','%s',%d,'%s','%s')\0", title.c_str(), source_names.c_str(), day_time, preview_pic.c_str(), abstract_ids.c_str());
+        my_res = execSql(&mysql, query, strlen(query));
+        mysql_free_result(my_res);
         if (NULL == my_res) {
             fprintf(stderr, "Call mysql_store_result error. Error: %s\n", mysql_error(&mysql));
             mysql_close(&mysql);
@@ -148,11 +150,31 @@ int main(int argc, char *argv[]) {
 }
 
 bool computeTF(map<string, int> &target_tf, map<string, int> &example_tf, string text) {
-
+    vector<string> words;
+    segment.cut(text, words);
+    for (unsigned int i = 0; i < words.size(); ++i) {
+        if (example_tf.find(words[i])) {
+            target_tf[words[i]]++;
+        }
+    }
+    return true;
 }
 
 double computeSimilarity(map<string, int> &tf1, map<string, int> &tf2) {
-
+    double numerator  = 0.0;
+    double tf1_square = 0.0;
+    double tf2_square = 0.0;
+    for (map<string, int>::iterator p = tf1.begin(); p != tf1.end(); ++p) {
+        string key  = (*p).first;
+        numerator  += tf1[key] * tf2[key];
+        tf1_square += tf1[key];
+        tf2_square += tf2[key];
+    }
+    double denominator = sqrt(tf1_square * tf2_square);
+    if (abs(denominator) < 0.00001) {
+        return 0.0;
+    }
+    return numerator / denominator;
 }
 
 int cstr2int(char *s, int len) {
