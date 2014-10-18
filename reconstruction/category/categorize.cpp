@@ -23,6 +23,12 @@ bool   computeTF(map<string, int> &target_tf, map<string, int> &example_tf, stri
 double computeSimilarity(map<string, int> &tf1, map<string, int> &tf2);
 int    cstr2int(char *s, int len);
 
+bool   initLastMtime();
+bool   setLastMtime();
+
+bool      initMysql(MYSQL *p_mysql);
+MYSQL_RES *execSql(MYSQL *p_mysql, char *query, int query_len);
+
 int main(int argc, char *argv[]) {
 
     MYSQL     mysql;
@@ -30,14 +36,14 @@ int main(int argc, char *argv[]) {
     //vector<string> passages;
     vector<string> words;
 
-    MixSegment  segment(dict_path, model_path);
+    MixSegment       segment(dict_path, model_path);
     KeywordExtractor extractor(dict_path, model_path, idf_path, stop_words_path);
-    PosTagger tagger(dict_path, model_path, user_dict_path);
+    PosTagger        tagger(dict_path, model_path, user_dict_path);
+
     vector<pair<string, double> > wordweights;
     vector<pair<string, string> > wordtags;
     //vector<pair<string, double> > wordweights_compared;
     int tags_num = 11;
-    last_time = getLastTime();
 
     if (!initLastMtime()) {
         fprintf(stderr, "Failed to get last mtime\n");
@@ -145,6 +151,7 @@ int main(int argc, char *argv[]) {
         }
     }
     mysql_close(&mysql);
+    setLastMtime();
     fprintf(stdout, "Done\n");
     return 0;
 }
@@ -187,20 +194,21 @@ int cstr2int(char *s, int len) {
 
     int res    = 0;
     bool minus = false;
-    for (int i = 0; i < len; ++i) {
-        if ('-' == s[i]) {
+    for (int i = 0; i + offset < len; ++i) {
+        int index = i + offset;
+        if ('-' == s[index]) {
             if (minus || i != 0) {
                 res = 0;
                 break;
             } else {
                 minus = true;
             }
-        } else if ('+' == s[i]) {
+        } else if ('+' == s[index]) {
             if (i != 0) {
                 res = 0;
                 break;
             }
-        } else {
+        } else if (s[index] > '9' || s[index] < '0'){
             break;
         }
 
@@ -212,4 +220,60 @@ int cstr2int(char *s, int len) {
         res *= -1;
     }
     return res;
+}
+
+bool initLastMtime() {
+    std::filebuf fb;
+    if (fb.open("lastmtime", std::ios::in)) {
+        std::istream is(&fb);
+        char buffer[11];
+        is.read(buffer, 10);
+        fb.close();
+        last_mtime = cstr2int(buffer, 10);
+    }
+    return true;
+}
+
+bool setLastMtime() {
+    time_t ts;
+    time(&ts);
+    char cstr_ts[20];
+    sprintf(cstr_ts, "%ld", ts);
+
+    std::filebuf fb;
+    fb.open("lastmtime", std::ios::out);
+    std::ostream os(&fb);
+    os<<cstr_ts;
+    fb.close();
+    return true;
+}
+
+bool initMysql(MYSQL *p_mysql) {
+    mysql_init(p_mysql);
+    if (!mysql_real_connect(p_mysql, "127.0.0.1", "root", "123abc", "reetsee_news", 3306, NULL, 0)) {
+        fprintf(stderr, "Failed to connect to database: Error: %s\n", mysql_error(p_mysql));
+        return false;
+    } else {
+        fprintf(stdout, "Connected to MySQL DB.\n");
+    }
+
+    //set charset
+    if (!mysql_set_character_set(p_mysql, "utf8")) {
+        printf("New client character set: %s\n", mysql_character_set_name(p_mysql));
+    }
+    return true;
+}
+
+MYSQL_RES *execSql(MYSQL *p_mysql, char *query, int query_len) {
+    if (mysql_real_query(p_mysql, query, query_len)) {
+        fprintf(stderr, "Execute sql error. Error: %s\n", mysql_error(p_mysql));
+        return NULL; 
+    }
+
+    MYSQL_RES *my_res = mysql_store_result(p_mysql);
+    if (NULL == my_res) {
+        fprintf(stderr, "Call mysql_store_result error. Error: %s\n", mysql_error(p_mysql));
+        return NULL;
+    }
+    return my_res;
 }
