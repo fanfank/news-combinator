@@ -10,6 +10,7 @@
 #include <time.h>
 #include "MixSegment.hpp"
 #include "KeywordExtractor.hpp"
+#include "PosTagger.hpp"
 using namespace CppJieba;
 const char * const dict_path       = "./dict/jieba.dict.utf8";
 const char * const model_path      = "./dict/hmm_model.utf8";
@@ -17,7 +18,8 @@ const char * const idf_path        = "./dict/idf.utf8";
 const char * const stop_words_path = "./dict/stop_words.utf8";
 const char * const user_dict_path  = "./dict/user.dict.utf8";
 
-const SIMILARITY_BOUND = 0.85;
+const double       SIMILARITY_BOUND  = 0.85;
+const unsigned int MAX_SIMILAR_TEXTS = 7;
 
 int last_mtime = -1;
 
@@ -32,6 +34,10 @@ bool   setLastMtime();
 bool      initMysql(MYSQL *p_mysql);
 MYSQL_RES *execSql(MYSQL *p_mysql, char *query, int query_len);
 
+MixSegment       segment(dict_path, model_path);
+KeywordExtractor extractor(dict_path, model_path, idf_path, stop_words_path);
+PosTagger        tagger(dict_path, model_path, user_dict_path);
+
 int main(int argc, char *argv[]) {
 
     MYSQL     mysql;
@@ -39,12 +45,8 @@ int main(int argc, char *argv[]) {
     //vector<string> passages;
     //vector<string> words;
 
-    MixSegment       segment(dict_path, model_path);
-    KeywordExtractor extractor(dict_path, model_path, idf_path, stop_words_path);
-    PosTagger        tagger(dict_path, model_path, user_dict_path);
-
-    //vector<pair<string, double> > wordweights;
-    vector<pair<string, string> > wordtags;
+    vector<pair<string, double> > wordweights;
+    //vector<pair<string, string> > wordtags;
     //vector<pair<string, double> > wordweights_compared;
     int tags_num = 11;
 
@@ -92,16 +94,18 @@ int main(int argc, char *argv[]) {
         if (set_handled_index.find(i) != set_handled_index.end()) {
             continue;
         }
+        fprintf(stdout, "computing %s:%s ...\n", formatted_res["source_name"][i].c_str(), formatted_res["source_news_id"][i].c_str());
+        double avg_similarity = 0.0;
         set_handled_index.insert(i);
 
-        wordtags.clear();
+        wordweights.clear();
         example_tf.clear();
         set_similar_index.clear();
 
         //set_similar_index.insert(i);
-        extractor.extract(formatted_res["content"][i], wordtags, tags_num);
-        for (int j = 0; j < wordtags.size(); ++j) {
-            example_tf[wordtags[j].first] = 0;
+        extractor.extract(formatted_res["content"][i], wordweights, tags_num);
+        for (unsigned int j = 0; j < wordweights.size(); ++j) {
+            example_tf[wordweights[j].first] = 0;
         }
 
         //compute term frequency
@@ -111,11 +115,14 @@ int main(int argc, char *argv[]) {
             target_tf.clear();
             computeTF(target_tf, example_tf, formatted_res["content"][j]);
             //compute cosin similarity
-            double similarity = computeSimilarity(target_tf, example_tf);
+            double similarity = computeSimilarity(example_tf, target_tf);
             if (similarity >= SIMILARITY_BOUND) {
-                fprintf(stdout, "Found similar passager from %s:%s, similarity:%lf\n", formatted_res["source_name"][j], formatted_res["source_news_id"][j], similarity);
+                fprintf(stdout, "Found similar passager from %s:%s, similarity:%lf\n", formatted_res["source_name"][j].c_str(), formatted_res["source_news_id"][j].c_str(), similarity);
                 set_similar_index.insert(j);
+            } else {
+                //fprintf(stdout, "similarity:%lf\n", similarity);
             }
+            avg_similarity += similarity;
         }
 
         //handle similar texts
@@ -135,6 +142,12 @@ int main(int argc, char *argv[]) {
         string preview_pic  = "";
         string abstract_ids = formatted_res["abstract_id"][i];
 
+        //noise checking
+        if (set_similar_index.size() > MAX_SIMILAR_TEXTS) {
+            fprintf(stdout, "Too much noise in this passage: %s\n", formatted_res["source_news_id"][i].c_str());
+            continue;
+        }
+
         for (set<int>::iterator p = set_similar_index.begin(); p != set_similar_index.end(); ++p) {
             string s = ",";
             source_names.append(s + formatted_res["source_name"][*p]);
@@ -143,13 +156,18 @@ int main(int argc, char *argv[]) {
         }
 
         //insert new entries
-        sprintf(query, "INSERT INTO `news_category` (`title`, `source_names`, `day_time`, `preview_pic`, `abstract_ids`) VALUES ('%s','%s',%d,'%s','%s')\0", title.c_str(), source_names.c_str(), day_time, preview_pic.c_str(), abstract_ids.c_str());
-        my_res = execSql(&mysql, query, strlen(query));
+        if (!set_similar_index.empty()) {
+            sprintf(query, "INSERT INTO `news_category` (`title`, `source_names`, `day_time`, `preview_pic`, `abstract_ids`) VALUES ('%s','%s',%d,'%s','%s')\0", title.c_str(), source_names.c_str(), day_time, preview_pic.c_str(), abstract_ids.c_str());
+            my_res = execSql(&mysql, query, strlen(query));
+        }
+        fprintf(stdout, "Average similarity:%lf\n", avg_similarity / set_similar_index.size());
+        /*
         if (NULL == my_res) {
             fprintf(stderr, "Call mysql_store_result error. Error: %s\n", mysql_error(&mysql));
             mysql_close(&mysql);
             exit(1);
         }
+        */
         mysql_free_result(my_res);
     }
     mysql_close(&mysql);
@@ -175,6 +193,7 @@ double computeSimilarity(map<string, int> &tf1, map<string, int> &tf2) {
     double tf2_square = 0.0;
     for (map<string, int>::iterator p = tf1.begin(); p != tf1.end(); ++p) {
         string key  = p->first;
+        //cout<<key<<endl;
         numerator  += tf1[key] * tf2[key];
         tf1_square += tf1[key] * tf1[key];
         tf2_square += tf2[key] * tf2[key];
@@ -186,7 +205,7 @@ double computeSimilarity(map<string, int> &tf1, map<string, int> &tf2) {
     return numerator / denominator;
 }
 
-int cstr2int(char *s, int len) {
+int cstr2int(const char *s, int len) {
     if (0 >= len) {
         return 0;
     }
@@ -224,8 +243,13 @@ int cstr2int(char *s, int len) {
     return res;
 }
 
+int cstr2int(char *s, int len) {
+    const char *cs = static_cast<const char*>(s);
+    return cstr2int(cs, len);
+}
+
 int str2int(string s) {
-    return cstr2int(s.c_str());
+    return cstr2int(s.c_str(), s.size());
 }
 
 bool initLastMtime() {
@@ -277,9 +301,11 @@ MYSQL_RES *execSql(MYSQL *p_mysql, char *query, int query_len) {
     }
 
     MYSQL_RES *my_res = mysql_store_result(p_mysql);
+    /*
     if (NULL == my_res) {
         fprintf(stderr, "Call mysql_store_result error. Error: %s\n", mysql_error(p_mysql));
         return NULL;
     }
+    */
     return my_res;
 }
