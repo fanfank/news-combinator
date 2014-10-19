@@ -1,5 +1,7 @@
+#include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <math.h>
 #include <mysql.h>
 #include <set>
 #include <stdio.h>
@@ -22,6 +24,7 @@ int last_mtime = -1;
 bool   computeTF(map<string, int> &target_tf, map<string, int> &example_tf, string text);
 double computeSimilarity(map<string, int> &tf1, map<string, int> &tf2);
 int    cstr2int(char *s, int len);
+int    str2int(string s);
 
 bool   initLastMtime();
 bool   setLastMtime();
@@ -34,13 +37,13 @@ int main(int argc, char *argv[]) {
     MYSQL     mysql;
     MYSQL_RES *my_res = NULL;
     //vector<string> passages;
-    vector<string> words;
+    //vector<string> words;
 
     MixSegment       segment(dict_path, model_path);
     KeywordExtractor extractor(dict_path, model_path, idf_path, stop_words_path);
     PosTagger        tagger(dict_path, model_path, user_dict_path);
 
-    vector<pair<string, double> > wordweights;
+    //vector<pair<string, double> > wordweights;
     vector<pair<string, string> > wordtags;
     //vector<pair<string, double> > wordweights_compared;
     int tags_num = 11;
@@ -56,7 +59,7 @@ int main(int argc, char *argv[]) {
 
     //execute sql
     char query[1000];
-    fprintf(query, "SELECT `title`, `source_name`, `content`, `abstract_id`, `timestamp`, `source_news_id` FROM `news_content` WHERE `timestamp` > %d\0", last_mtime);
+    sprintf(query, "SELECT `title`, `source_name`, `content`, `abstract_id`, `timestamp`, `source_news_id` FROM `news_content` WHERE `timestamp` > %d\0", last_mtime);
     my_res = execSql(&mysql, query, strlen(query));
     if (NULL == my_res) {
         fprintf(stderr, "Call mysql_store_result error. Error: %s\n", mysql_error(&mysql));
@@ -66,9 +69,9 @@ int main(int argc, char *argv[]) {
 
     //format sql res
     map<string, vector<string> > formatted_res;
-    MYSQL_ROW row;
+    MYSQL_ROW   row;
     MYSQL_FIELD *fields;
-    int row_num = 0;
+    int         row_num = 0;
     fields = mysql_fetch_fields(my_res);
     unsigned int num_fields = mysql_num_fields(my_res);
     fprintf(stdout, "Got %u entries ...\n", num_fields);
@@ -86,31 +89,31 @@ int main(int argc, char *argv[]) {
     map<string, int> example_tf;
     map<string, int> target_tf;
     for (int i = 0; i < row_num; ++i) {
-        if (set_handled_index.find(i)) {
+        if (set_handled_index.find(i) != set_handled_index.end()) {
             continue;
         }
         set_handled_index.insert(i);
 
+        wordtags.clear();
         example_tf.clear();
-        wordweights.clear();
         set_similar_index.clear();
 
         //set_similar_index.insert(i);
-        extractor.extract(formatted_res["content"][i], wordweights, tags_num);
+        extractor.extract(formatted_res["content"][i], wordtags, tags_num);
         for (int j = 0; j < wordtags.size(); ++j) {
-            example_tf[wordweight[j].first] = 0;
+            example_tf[wordtags[j].first] = 0;
         }
 
-        // TODO computeTF
+        //compute term frequency
         computeTF(example_tf, example_tf, formatted_res["content"][i]);
 
         for (int j = i + 1; j < row_num; ++j) {
             target_tf.clear();
             computeTF(target_tf, example_tf, formatted_res["content"][j]);
-            // TODO computeSimilarity
+            //compute cosin similarity
             double similarity = computeSimilarity(target_tf, example_tf);
             if (similarity >= SIMILARITY_BOUND) {
-                fprintf(stdout, "Found similar passager from %s:%s, similarity:%lf\n", formatted_res["source_name"][j], formatted_res["source_news_id"], similarity);
+                fprintf(stdout, "Found similar passager from %s:%s, similarity:%lf\n", formatted_res["source_name"][j], formatted_res["source_news_id"][j], similarity);
                 set_similar_index.insert(j);
             }
         }
@@ -121,14 +124,13 @@ int main(int argc, char *argv[]) {
         //| day_time     | int(11) unsigned | NO   | MUL | 19700101 |                |
         //| preview_pic  | varchar(1024)    | NO   |     |          |                |
         //| abstract_ids | varchar(1024)    | NO   |     |          |                |
-        time_t ts     = static_cast<time_t> formatted_res["timestamp"];
+        time_t ts     = static_cast<time_t>(str2int(formatted_res["timestamp"][i]));
         struct tm tm  = *localtime(&ts);
         char   dt[16];
         strftime(dt, sizeof(dt), "%Y%m%d", &tm);
 
         string title        = formatted_res["title"][i];
         string source_names = formatted_res["source_name"][i];
-        // TODO str2int
         int    day_time     = cstr2int(dt, strlen(dt));
         string preview_pic  = "";
         string abstract_ids = formatted_res["abstract_id"][i];
@@ -141,14 +143,14 @@ int main(int argc, char *argv[]) {
         }
 
         //insert new entries
-        fprintf(query, "INSERT INTO `news_category` (`title`, `source_names`, `day_time`, `preview_pic`, `abstract_ids`) VALUES ('%s','%s',%d,'%s','%s')\0", title.c_str(), source_names.c_str(), day_time, preview_pic.c_str(), abstract_ids.c_str());
+        sprintf(query, "INSERT INTO `news_category` (`title`, `source_names`, `day_time`, `preview_pic`, `abstract_ids`) VALUES ('%s','%s',%d,'%s','%s')\0", title.c_str(), source_names.c_str(), day_time, preview_pic.c_str(), abstract_ids.c_str());
         my_res = execSql(&mysql, query, strlen(query));
-        mysql_free_result(my_res);
         if (NULL == my_res) {
             fprintf(stderr, "Call mysql_store_result error. Error: %s\n", mysql_error(&mysql));
             mysql_close(&mysql);
             exit(1);
         }
+        mysql_free_result(my_res);
     }
     mysql_close(&mysql);
     setLastMtime();
@@ -160,7 +162,7 @@ bool computeTF(map<string, int> &target_tf, map<string, int> &example_tf, string
     vector<string> words;
     segment.cut(text, words);
     for (unsigned int i = 0; i < words.size(); ++i) {
-        if (example_tf.find(words[i])) {
+        if (example_tf.find(words[i]) != example_tf.end()) {
             target_tf[words[i]]++;
         }
     }
@@ -172,13 +174,13 @@ double computeSimilarity(map<string, int> &tf1, map<string, int> &tf2) {
     double tf1_square = 0.0;
     double tf2_square = 0.0;
     for (map<string, int>::iterator p = tf1.begin(); p != tf1.end(); ++p) {
-        string key  = (*p).first;
+        string key  = p->first;
         numerator  += tf1[key] * tf2[key];
-        tf1_square += tf1[key];
-        tf2_square += tf2[key];
+        tf1_square += tf1[key] * tf1[key];
+        tf2_square += tf2[key] * tf2[key];
     }
     double denominator = sqrt(tf1_square * tf2_square);
-    if (abs(denominator) < 0.00001) {
+    if (fabs(denominator) < 0.00001) {
         return 0.0;
     }
     return numerator / denominator;
@@ -220,6 +222,10 @@ int cstr2int(char *s, int len) {
         res *= -1;
     }
     return res;
+}
+
+int str2int(string s) {
+    return cstr2int(s.c_str());
 }
 
 bool initLastMtime() {
