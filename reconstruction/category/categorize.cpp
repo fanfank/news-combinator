@@ -76,7 +76,6 @@ int main(int argc, char *argv[]) {
     int         row_num = 0;
     fields = mysql_fetch_fields(my_res);
     unsigned int num_fields = mysql_num_fields(my_res);
-    fprintf(stdout, "Got %u entries ...\n", num_fields);
     while(row = mysql_fetch_row(my_res)) {
         for (unsigned int i = 0; i < num_fields; ++i) {
             formatted_res[fields[i].name].push_back(row[i]);
@@ -84,6 +83,7 @@ int main(int argc, char *argv[]) {
         ++row_num;
     }
     mysql_free_result(my_res);
+    fprintf(stdout, "Got %u entries ...\n", row_num);
 
     //start categorizing
     set<int> set_handled_index;
@@ -159,8 +159,8 @@ int main(int argc, char *argv[]) {
         if (!set_similar_index.empty()) {
             sprintf(query, "INSERT INTO `news_category` (`title`, `source_names`, `day_time`, `preview_pic`, `abstract_ids`) VALUES ('%s','%s',%d,'%s','%s')\0", title.c_str(), source_names.c_str(), day_time, preview_pic.c_str(), abstract_ids.c_str());
             my_res = execSql(&mysql, query, strlen(query));
+            fprintf(stdout, "Average similarity:%lf\n", avg_similarity / set_similar_index.size());
         }
-        fprintf(stdout, "Average similarity:%lf\n", avg_similarity / set_similar_index.size());
         /*
         if (NULL == my_res) {
             fprintf(stderr, "Call mysql_store_result error. Error: %s\n", mysql_error(&mysql));
@@ -168,7 +168,6 @@ int main(int argc, char *argv[]) {
             exit(1);
         }
         */
-        mysql_free_result(my_res);
     }
     mysql_close(&mysql);
     setLastMtime();
@@ -260,6 +259,7 @@ bool initLastMtime() {
         is.read(buffer, 10);
         fb.close();
         last_mtime = cstr2int(buffer, 10);
+        fprintf(stdout, "init last mtime:%d\n", last_mtime);
     }
     return true;
 }
