@@ -1,7 +1,8 @@
 <?php
 require_once('phpfetcher.php'); //phpfetcher是Reetsee.Xu(即我)写的一个简单的PHP实现的爬虫框架
                                 //可以参见https://github.com/fanfank/phpfetcher
-require_once('reetsee.php'); //一个操作数据库的简易库
+require_once('reetsee.php');    //请参考： https://github.com/fanfank/reetsee_phplib
+
 class news_crawler extends Phpfetcher_Crawler_Default {
     public function handlePage($page) {
         //print_r($page->getHyperLinks());
@@ -24,28 +25,46 @@ class news_crawler extends Phpfetcher_Crawler_Default {
             return TRUE;
         }
 
-        $dbm = new Reetsee_Db();
-        $dbm->initDb('reetsee_news', 'utf8', '127.0.0.1', 3306, 'root', '123abc');
-        $res = $dbm->insert($arrData['news_abstract'], 'news_abstract');
-        if (!$res) {
-            $db = $dbm->getDb('reetsee_news');
-            echo 'Insert abstract error:' . $db->error . ' ' . $db->errno . "\n";
-            return FALSE;
+        $db = Reetsee_Db::initDb('reetsee_news', '127.0.0.1', 3306, 'root', '123abc', 'utf8');
+        if (NULL === $db) {
+            echo "get db error\n";
         }
 
-        $intLastAbsId = $dbm->getLastId();
-        $arrData['news_content']['abstract_id'] = $intLastAbsId;
-        $res = $dbm->insert($arrData['news_content'], 'news_content');
+        $arrSql = array(
+            'table'  => 'news_abstract',
+            'fields' => $arrData['news_abstract'],
+        );
+        $res = $db->insert($arrSql['table'], $arrSql['fields']);
         if (!$res) {
-            $db = $dbm->getDb('reetsee_news');
             echo 'Insert content error:' . $db->error . ' ' . $db->errno . "\n";
             return FALSE;
         }
 
-        $intLastCtId = $dbm->getLastId();
-        $res = $dbm->update(array('content_id' => $intLastCtId), 'news_abstract', array('id' => $intLastAbsId));
+        $intLastAbsId = $db->insert_id;
+        $arrData['news_content']['abstract_id'] = $intLastAbsId;
+        $arrSql = array(
+            'table'  => 'news_content',   
+            'fields' => $arrData['news_content'],
+        );
+        $res = $db->insert($arrSql['table'], $arrSql['fields']);
         if (!$res) {
-            $db = $dbm->getDb('reetsee_news');
+            echo 'Insert content error:' . $db->error . ' ' . $db->errno . "\n";
+            return FALSE;
+        }
+
+        $intLastCtId = $db->insert_id;
+        $arrSql = array(
+            'table'  => 'news_abstract',   
+            'fields' => array(
+                'content_id' => $intLastCtId,    
+            ),
+            'conds' => array(
+                'id=' => $intLastAbsId,    
+            ),
+
+        );
+        $res = $db->update($arrSql['table'], $arrSql['fields'], $arrSql['conds']);
+        if (!$res) {
             echo 'Update abstract error:' . $db->error . ' ' . $db->errno . "\n";
             return FALSE;
         }
