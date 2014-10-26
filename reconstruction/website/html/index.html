@@ -7,7 +7,9 @@
 </head>
 <body>
     <?php 
-        echo $top-navigation;
+        if (!empty($top-navigation)) {
+            echo $top-navigation;
+        }
     ?>
     <div id = "big_block">
     <?php
@@ -31,7 +33,9 @@
     ?>
     </div>
     <?php
-        echo $bottom-navigation;
+        if (!empty($bottom-navigation)) {
+            echo $bottom-navigation;
+        }
     ?>
 </body>
 </html>
