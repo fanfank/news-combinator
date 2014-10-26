@@ -23,14 +23,14 @@ if (NULL === $db) {
 //| abstract_ids | varchar(1024)    | NO   |     |          |                |
 //+--------------+------------------+------+-----+----------+----------------+
 $intEarliestTs  = strtotime("-$intRange days");
-$intEarliestDay = date("Ymd", $intEarliestTs);
+$strEarliestDay = date("Ymd", $intEarliestTs);
 $arrSql = array(
     'table'  => 'news_category',
     'fields' => array(
         'id', ' title', 'source_names', 'day_time', 'preview_pic', 'abstract_ids' ,  
     ),  
     'conds'  => array(
-        'day_time>=' => $intEarliestDay, 
+        'day_time>=' => $strEarliestDay, 
     ),
 );
 
