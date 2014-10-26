@@ -1,0 +1,37 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>吹水新闻</title>
+    <link rel="stylesheet" type="text/css" href="/css/index.css">
+</head>
+<body>
+    <?php 
+        echo $top-navigation;
+    ?>
+    <div id = "big_block">
+    <?php
+        foreach ($data as $day_time => $news_entries) {
+            $entries_title = substr($day_time, 0, 4) . "年" . substr($day_time, 4, 2) . "月" . substr($day_time, 6, 2) . "日新闻";
+            echo "<div><h2>$entries_title</h2></div>";
+            echo "<div class = 'entries_block'>";
+            foreach ($news_entries as $news_entry) {
+                $arrSourceNames = explode(',', $news_entry['source_names']);
+                echo "<span class = 'entry'>";
+                echo "<span class = 'icons_block'>";
+                foreach ($arrSourceNames as $source_name) {
+                    echo "<img src='/icons/{$source_name}.png' width='15px' height='15px'>";
+                }
+                echo "</span>";
+                echo "<a class='news_title' href='/entry?category_id={$news_entry['id']}'>{$news_entry['title']}></a>";
+                echo "</span>";
+            }
+            echo "</div>";
+        }
+    ?>
+    </div>
+    <?php
+        echo $bottom-navigation;
+    ?>
+</body>
+</html>
