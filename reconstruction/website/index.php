@@ -6,8 +6,11 @@ if (empty($intRange) || $intRange < 1) {
     $intRange = 2;
 }
 
-$dbm = new Reetsee_Db();
-$dbm->initDb('reetsee_news', 'utf8', '127.0.0.1', '3306', 'root', '123abc');
+$db = Reetsee_Db::initDb('reetsee_news', '127.0.0.1', 3306, 'root', '123abc', 'utf8');
+if (NULL === $db) {
+    echo "get db error\n";
+    exit(1);
+}
 
 //+--------------+------------------+------+-----+----------+----------------+
 //| Field        | Type             | Null | Key | Default  | Extra          |
@@ -30,10 +33,9 @@ $arrSql = array(
         'day_time>=' => $intEarliestDay, 
     ),
 );
-// TODO reetsee_db is way on reconstruction
-$res = $dbm->select($arrSql['table'], $arrSql['fields'], $arrSql['conds']);
+
+$res = $db->select($arrSql['table'], $arrSql['fields'], $arrSql['conds']);
 if (!$res) {
-    $db = $dbm->getDb('reetsee_news');
     Reetsee_Log::error('Insert abstract error:' . $db->error . ' ' . $db->errno);
     include_once("reetsee_news_404.html");
     exit(1);

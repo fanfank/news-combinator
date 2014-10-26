@@ -33,6 +33,9 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         $arrSql = array(
             'table'  => 'news_abstract',
             'fields' => $arrData['news_abstract'],
+            'dup'    => array(
+                'timestamp' => intval(time()) , 
+            ),
         );
         $res = $db->insert($arrSql['table'], $arrSql['fields']);
         if (!$res) {
@@ -45,6 +48,9 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         $arrSql = array(
             'table'  => 'news_content',   
             'fields' => $arrData['news_content'],
+            'dup'    => array(
+                'timestamp' => intval(time()) , 
+            ),
         );
         $res = $db->insert($arrSql['table'], $arrSql['fields']);
         if (!$res) {
