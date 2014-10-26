@@ -37,7 +37,8 @@ $arrSql = array(
 $res = $db->select($arrSql['table'], $arrSql['fields'], $arrSql['conds']);
 if (!$res) {
     Reetsee_Log::error('Insert abstract error:' . $db->error . ' ' . $db->errno);
-    include_once("reetsee_news_404.html");
+    include implode(PATH_SEPERATOR, array(DIR(__FILE__), 'html', 'reetsee_news_404.html'));
+    //include_once("reetsee_news_404.html");
     exit(1);
 }
 
