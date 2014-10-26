@@ -22,6 +22,7 @@ if (NULL === $db) {
 //| preview_pic  | varchar(1024)    | NO   |     |          |                |
 //| abstract_ids | varchar(1024)    | NO   |     |          |                |
 //+--------------+------------------+------+-----+----------+----------------+
+$HTML_DIR       = implode(PATH_SEPARATOR, array(dirname(__FILE__), 'html'));
 $intEarliestTs  = strtotime("-$intRange days");
 $strEarliestDay = date("Ymd", $intEarliestTs);
 $arrSql = array(
@@ -37,7 +38,7 @@ $arrSql = array(
 $res = $db->select($arrSql['table'], $arrSql['fields'], $arrSql['conds']);
 if (!$res) {
     Reetsee_Log::error('Insert abstract error:' . $db->error . ' ' . $db->errno);
-    include implode(PATH_SEPERATOR, array(DIR(__FILE__), 'html', 'reetsee_news_404.html'));
+    include implode(PATH_SEPARATOR, array($HTML_DIR, 'reetsee_news_404.html'));
     //include_once("reetsee_news_404.html");
     exit(1);
 }
@@ -46,5 +47,5 @@ $data = array();
 foreach ($res as $entry) {
     $data[$entry['day_time']][] = $entry;
 }
-include implode(PATH_SEPERATOR, array(DIR(__FILE__), 'html', 'index.html'));
+include implode(PATH_SEPARATOR, array($HTML_DIR, 'index.html'));
 exit(0);
