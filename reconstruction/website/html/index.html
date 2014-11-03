@@ -3,7 +3,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <title>吹水新闻</title>
-    <link rel="stylesheet" type="text/css" href="/css/index.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/index.css">
 </head>
 <body>
     <?php 
@@ -22,10 +22,10 @@
                 echo "<span class = 'entry'>";
                 echo "<span class = 'icons_block'>";
                 foreach ($arrSourceNames as $source_name) {
-                    echo "<img src='/icons/{$source_name}.png' width='15px' height='15px'>";
+                    echo "<img src='/static/icons/{$source_name}.png' width='15px' height='15px'>";
                 }
                 echo "</span>";
-                echo "<a class='news_title' href='/entry?category_id={$news_entry['id']}'>{$news_entry['title']}></a>";
+                echo "<a class='news_title' href='/entry/category/{$news_entry['id']}'>{$news_entry['title']}</a>";
                 echo "</span>";
             }
             echo "</div>";
