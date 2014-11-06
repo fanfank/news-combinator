@@ -265,6 +265,8 @@ class news_crawler extends Phpfetcher_Crawler_Default {
     }
 }
 
+$intTimeSt = time();
+
 $crawler = new news_crawler();
 $arrFetchJobs = array(
     'tencent' => array(
@@ -289,7 +291,10 @@ $arrFetchJobs = array(
         'max_depth' => 2, 
     ),
 );
+
 $crawler->setFetchJobs($arrFetchJobs)->run();
 
+$intTimeEd = time();
+echo "Cost " . ($intTimeEd - $intTimeSt) . " seconds\n";
 echo "DONE\n";
 ?>
