@@ -5,9 +5,10 @@
  * @desc   默认action
  */
 class indexAction {
+    const MAX_RANGE = 50;
     public function process() {
         $intRange = intval($_GET['range']);
-        if (empty($intRange) || $intRange < 1) {
+        if (empty($intRange) || $intRange < 1 || MAX_RANGE < $intRange) {
             $intRange = 2;
         }
         
@@ -45,7 +46,6 @@ class indexAction {
         if (false === $res) {
             Reetsee_Log::error('Select abstract error:' . $db->error . ' ' . $db->errno);
             include implode(DIRECTORY_SEPARATOR, array($HTML_DIR, 'reetsee_news_404.html'));
-            //include_once("reetsee_news_404.html");
             return -1;
         }
         
