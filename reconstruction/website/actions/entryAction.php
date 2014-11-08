@@ -5,9 +5,15 @@
  * @desc   详细新闻内容相关action
  */
 class Actions_entryAction {
-    public static $HTML_DIR  = implode(DIRECTORY_SEPARATOR, array(MODULE_PATH, 'html'));
-    public static $strTplDst = implode(DIRECTORY_SEPARATOR, array(self::$HTML_DIR, 'entry.html'));
-    public static $strErrDst = implode(DIRECTORY_SEPARATOR, array(self::$HTML_DIR, 'reetsee_news_404.html'));
+    protected $HTML_DIR  = NULL;
+    protected $strTplDst = NULL;
+    protected $strErrDst = NULL;
+
+    function __construct() {
+        $this->HTML_DIR  = implode(DIRECTORY_SEPARATOR, array(MODULE_PATH, 'html'));
+        $this->strTplDst = implode(DIRECTORY_SEPARATOR, array($this->HTML_DIR, 'entry.html'));
+        $this->strErrDst = implode(DIRECTORY_SEPARATOR, array($this->HTML_DIR, 'reetsee_news_404.html'));
+    }
 
     public function process() {
 
@@ -29,7 +35,7 @@ class Actions_entryAction {
         //| preview_pic  | varchar(1024)    | NO   |     |          |                |
         //| abstract_ids | varchar(1024)    | NO   |     |          |                |
         //+--------------+------------------+------+-----+----------+----------------+
-        $HTML_DIR       = implode(DIRECTORY_SEPARATOR, array(MODULE_PATH, 'html'));
+        //$HTML_DIR       = implode(DIRECTORY_SEPARATOR, array(MODULE_PATH, 'html'));
         $arrSql = array(
             'table'  => 'news_category',  
             'fields' => array(
@@ -80,7 +86,8 @@ class Actions_entryAction {
             $res = $db->select($arrSql['table'], $arrSql['fields'], $arrSql['conds'], $arrSql['appends']);
             if (false === $res) {
                 Reetsee_Log::error('Select abstract error:' . $db->error . ' ' . $db->errno);
-                include implode(DIRECTORY_SEPARATOR, array($HTML_DIR, 'reetsee_news_404.html'));
+                $this->display(array(), $strErrDst);
+                //include implode(DIRECTORY_SEPARATOR, array($HTML_DIR, 'reetsee_news_404.html'));
                 return -1;
             }
 
@@ -96,12 +103,12 @@ class Actions_entryAction {
             'category' => $arrCategory,
             'news'     => $arrNews,    
         );
-        $this->display($arrTpl);
+        $this->display($arrTpl, $this->strTplDst);
 
         return 0;
     }
 
-    public function display($arrTpl = array(), $strDst = self::$strTplDst) {
+    public function display($arrTpl, $strDst) {
         include $strDst;
     }
 }

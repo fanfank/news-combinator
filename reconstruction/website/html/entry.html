@@ -2,14 +2,22 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <title>吹水新闻-出错啦</title>
+    <title><?php echo "吹水新闻-{$arrTpl['category']['title']}"; ?></title>
+    <link rel="stylesheet" type="text/css" href="/static/css/entry.css">
 </head>
 <body>
     <?php 
         include MODULE_PATH . '/html/template/top_navigation.html';
     ?>
-    <div id = "error_block">
-        <a href="/index?range=5">出错啦～返回上一页</a>
+    <div id = "big_block">
+    <?php
+        foreach ($arrTpl['news'] as $news_entry) {
+            echo "<p>";
+            echo $news_entry['content'];
+            echo "</p>";
+            echo "<br/>";
+        }
+    ?>
     </div>
     <?php
         include MODULE_PATH . '/html/template/bottom_navigation.html';

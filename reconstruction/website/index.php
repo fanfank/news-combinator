@@ -1,5 +1,5 @@
 <?php
-define(MODULE_PATH, dirname(__FILE__));
+define("MODULE_PATH", dirname(__FILE__));
 
 $strActionPath = "";
 
