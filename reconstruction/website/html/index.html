@@ -7,9 +7,7 @@
 </head>
 <body>
     <?php 
-        if (!empty($top_navigation)) {
-            echo $top_navigation;
-        }
+        include MODULE_PATH . '/html/top_navigation.html';
     ?>
     <div id = "big_block">
     <?php
@@ -33,9 +31,7 @@
     ?>
     </div>
     <?php
-        if (!empty($bottom_navigation)) {
-            echo $bottom_navigation;
-        }
+        include MODULE_PATH . '/html/bottom_navigation.html';
     ?>
 </body>
 </html>

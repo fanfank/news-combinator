@@ -4,7 +4,7 @@
  * @date   20141107
  * @desc   详细新闻内容相关action
  */
-class entryAction {
+class Actions_entryAction {
     public static $HTML_DIR  = implode(DIRECTORY_SEPARATOR, array(MODULE_PATH, 'html'));
     public static $strTplDst = implode(DIRECTORY_SEPARATOR, array(self::$HTML_DIR, 'entry.html'));
     public static $strErrDst = implode(DIRECTORY_SEPARATOR, array(self::$HTML_DIR, 'reetsee_news_404.html'));
@@ -48,10 +48,12 @@ class entryAction {
             return -1;
         }
 
+        $arrCategory = $res[0];
+
         $arrNews = array();
-        if (!empty($res)) {
+        if (!empty($arrCategory)) {
             //$arrAbstractIds = explode(',', $res[0]['abstract_ids']);
-            $strAbstractIds = $res[0]['abstract_ids'];
+            $strAbstractIds = $arrCategory['abstract_ids'];
           //+---------------------+------------------+------+-----+-----------------------------+----------------+
           //| Field               | Type             | Null | Key | Default                     | Extra          |
           //+---------------------+------------------+------+-----+-----------------------------+----------------+
@@ -91,7 +93,8 @@ class entryAction {
         ///
 
         $arrTpl = array(
-            'news' => $arrNews,    
+            'category' => $arrCategory,
+            'news'     => $arrNews,    
         );
         $this->display($arrTpl);
 
