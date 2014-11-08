@@ -96,8 +96,7 @@ class Actions_entryAction {
         unset($res);
 
         //TODO 获取实时评论
-        //
-        ///
+        //$arrComments = $this->getComments($arrNews);
 
         $arrTpl = array(
             'category' => $arrCategory,
