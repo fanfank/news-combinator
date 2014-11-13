@@ -40,12 +40,13 @@ class Actions_commentsAction {
         //获取本地评论 TODO
         ///
 
-        usort($arrComments, array($this, 'sortComments'));
+        //TODO
+        //usort($arrComments, array($this, 'sortComments'));
         $this->_retJson($arrComments);
     }
 
     public function setCurlConf(&$arrCurlConf, $arrInfo) {
-        switch ($entry['source_name']) {
+        switch ($arrInfo['entry']['source_name']) {
             case 'tencent':
                 $strDomain = 'http://coral.qq.com';
                 $strReq    = "/article/{$arrInfo['entry']['source_comment_id']}/hotcomment?reqnum={$arrInfo['rn']}&callback=myHotcommentList&_=" . intval(time()) . "444&ie=utf-8";
@@ -68,5 +69,113 @@ class Actions_commentsAction {
         }
         $strUrl = $strDomain . $strReq;
         $arrCurlConf['CURLOPT_URL'] = $strUrl;
+    }
+
+    //TODO
+    public function getComments($strContent, $arrInfo) {
+        $arrComments = array();
+        $matches     = array();
+        $data        = array();
+        $arrPathDict = array();
+        switch ($arrInfo['entry']['source_name']) {
+            case 'tencent':
+                $res  = preg_match('#^myHotcommentList\((.*)\)#', $strContent, $matches);
+
+                $data = json_decode($matches[1], true);
+                $data = $data['data']['commentid'];
+
+                $arrPathDict = array(
+                    'source'  => 'tencent',   
+                    'user'    => array('userinfo', 'nick'),
+                    'time'    => array('time'),
+                    'content' => array('content'),
+                );
+                break;
+
+            case 'netease':
+                $res = preg_match('#^var \w+=({.*});$#', $strContent, $matches);
+
+                $data = json_decode($matches[1], true);
+                $data = $data['hostPosts'];
+
+                $arrPathDict = array(
+                    'source'  => 'netease',   
+                    'user'    => array('1', 'n'),
+                    'time'    => array('1', 't'),
+                    'content' => array('1', 'b'),
+                );
+                break;
+            case 'sina':
+                $data = json_decode($strContent, true);
+                $data = $data['result']['host_list'];
+
+                $arrPathDict = array(
+                    'source'  => 'sina',   
+                    'user'    => 'nick',
+                    'time'    => 'time',
+                    'content' => 'content',
+                );
+
+                break;
+        }
+
+        $arrComments = $this->formatComments($data, $arrPathDict);
+        return $arrComments;
+    }
+
+    //TODO
+    public function sortComments($comment1, $comment2) {
+        return true;
+    }
+
+    //TODO
+    /**
+     * @author xuruiqi
+     * @param
+     *      array $arrData :
+     *      array $arrPathDict :
+     * @return
+     *      array :
+     *          array 0 :
+     *              str 'source'
+     *              str 'user'
+     *              str 'time'    //格式:%Y-%m-%d %H:%M:%S
+     *              str 'content' //评论内容
+     *          array 1 :
+     *              ...
+     *          ...
+     *          array n :
+     *              ...
+     *
+     * @desc 格式化不同的评论
+     */
+    public function formatComments($arrData, $arrPathDict) {
+        $arrOutput = array();
+        if (!is_array($arrData) || !is_array($arrPathDict)) {
+            return $arrOutput;
+        }
+
+        foreach ($arrData as $comment) {
+            $arrCm = array();
+            foreach ($arrPathDict as $key => $path) {
+                if (is_string($path)) {
+                    $arrCm[$key] = $path;
+                } else {
+                    $value = &$comment;
+                    foreach ($path as $field) {
+                        if (isset($value[$field])) {
+                            $value = &$value[$field];
+                        } else {
+                            $value = NULL;
+                            break;
+                        }
+                    }
+                    $arrCm[$key] = $value;
+                }
+            }
+            $arrOutput[] = $arrCm;
+        }
+
+        return $arrOutput;
     }
 }
