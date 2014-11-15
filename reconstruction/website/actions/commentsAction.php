@@ -4,7 +4,7 @@
  * @date   20141108
  * @desc   获取评论信息
  */
-class Actions_commentsAction {
+class Actions_commentsAction extends Actions_ActionBase {
     public function process() {
         //获取外站评论
         $intPn       = Reetsee_Http::get('Pn', 1);
@@ -40,8 +40,7 @@ class Actions_commentsAction {
         //获取本地评论 TODO
         ///
 
-        //TODO
-        //usort($arrComments, array($this, 'sortComments'));
+        usort($arrComments, array($this, 'sortComments'));
         $this->_retJson($arrComments);
     }
 
@@ -71,7 +70,37 @@ class Actions_commentsAction {
         $arrCurlConf['CURLOPT_URL'] = $strUrl;
     }
 
-    //TODO
+    /**
+     * @author xuruiqi
+     * @param
+     *      str $strContent //请求到的异步数据
+     *      arr $arrInfo :
+     *          int 'pn'    //页数
+     *          int 'rn'    //每页记录数
+     *          arr 'entry' : //和当前条目有关的信息
+     *              arr 0 :
+     *                  str 'source_name'   //来源名称
+     *                  ...                 //其它信息
+     *              arr 1 :
+     *                  ...
+     *              ...
+     *              arr n :
+     *                  ...
+     * @return
+     *      array :
+     *          array 0 :
+     *              str 'source'  //来源名称
+     *              str 'user'    //用户名
+     *              str 'time'    //格式:%Y-%m-%d %H:%i:%s
+     *              str 'content' //评论内容
+     *          array 1 :
+     *              ...
+     *          ...
+     *          array n :
+     *              ...
+     *
+     * @desc 获取评论
+     */
     public function getComments($strContent, $arrInfo) {
         $arrComments = array();
         $matches     = array();
@@ -123,12 +152,15 @@ class Actions_commentsAction {
         return $arrComments;
     }
 
-    //TODO
     public function sortComments($comment1, $comment2) {
-        return true;
+        if ('reetsee' === $comment1['source'] && 'reetsee' !== $comment2['source']) {
+            return true;
+        } else if ('reetsee' !== $comment1['source'] && 'reetsee' === $comment2['source']) {
+            return false;
+        }
+        return $comment1['time'] > $comment2['time'];
     }
 
-    //TODO
     /**
      * @author xuruiqi
      * @param
@@ -139,7 +171,7 @@ class Actions_commentsAction {
      *          array 0 :
      *              str 'source'
      *              str 'user'
-     *              str 'time'    //格式:%Y-%m-%d %H:%M:%S
+     *              str 'time'    //格式:%Y-%m-%d %H:%i:%s
      *              str 'content' //评论内容
      *          array 1 :
      *              ...
@@ -169,6 +201,11 @@ class Actions_commentsAction {
                             $value = NULL;
                             break;
                         }
+                    }
+
+                    if ('time' === $key && strlen(strval($value)) <= 12) {
+                        //时间戳转换为日期格式
+                        $value = date("%Y-%m-%d %H:%M:%S", $value);
                     }
                     $arrCm[$key] = $value;
                 }
