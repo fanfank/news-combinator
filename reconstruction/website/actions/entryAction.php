@@ -4,7 +4,7 @@
  * @date   20141107
  * @desc   详细新闻内容相关action
  */
-class Actions_entryAction {
+class entryAction {
     protected $HTML_DIR  = NULL;
     protected $strTplDst = NULL;
     protected $strErrDst = NULL;

@@ -4,7 +4,7 @@
  * @date   20141108
  * @desc   获取评论信息
  */
-class Actions_commentsAction extends Actions_ActionBase {
+class commentsAction extends Actions_ActionBase {
     public function process() {
         //获取外站评论
         $intPn       = Reetsee_Http::get('Pn', 1);

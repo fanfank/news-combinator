@@ -18,7 +18,7 @@ if (!empty($arrTmpPathInfo)) {
 }
 
 array_unshift($arrPathInfo, 'actions');
-$strActionClassName = 'Actions_' . end($arrPathInfo) . 'Action';
+$strActionClassName = end($arrPathInfo) . 'Action';
 $strActionPath = MODULE_PATH . DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, $arrPathInfo) . 'Action.php';
 
 if (!file_exists($strActionPath)) {

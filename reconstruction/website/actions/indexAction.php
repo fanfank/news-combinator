@@ -4,7 +4,7 @@
  * @date   20141106
  * @desc   默认action
  */
-class Actions_indexAction {
+class indexAction {
     const MAX_RANGE = 50;
     public function process() {
         $intRange = intval($_GET['range']);
