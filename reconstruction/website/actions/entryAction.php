@@ -83,7 +83,7 @@ class entryAction {
                 'appends' => " WHERE `abstract_id` IN ($strAbstractIds)",
             );
 
-            $res = $db->select($arrSql['table'], $arrSql['fields'], $arrSql['conds'], $arrSql['appends']);
+            $res = $db->select($arrSql['table'], $arrSql['fields'], NULL, $arrSql['appends']);
             if (false === $res) {
                 Reetsee_Log::error('Select abstract error:' . $db->error . ' ' . $db->errno);
                 $this->display(array(), $strErrDst);
