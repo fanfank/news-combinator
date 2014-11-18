@@ -5,7 +5,7 @@ DEPLOY_PATH="$ENV_PATH/module/news"
 OUTPUT_DIR="output"
 PRODUCT="news"
 OUTPUT_FILE="$PRODUCT.tar.gz"
-TARGET_FILES=" html actions index.php "
+TARGET_FILES=" html actions static index.php "
 
 mkdir -p $OUTPUT_DIR
 rm -rf $OUTPUT_DIR/*
