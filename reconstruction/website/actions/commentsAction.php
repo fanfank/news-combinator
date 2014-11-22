@@ -7,9 +7,13 @@
 class commentsAction extends Actions_ActionBase {
     public function process() {
         //获取外站评论
-        $intPn       = Reetsee_Http::get('Pn', 1);
-        $intRn       = Reetsee_Http::get('Rn', 10);
-        $arrNewsInfo = Reetsee_Http::get('news_info', array());
+        $intPn       = Reetsee_Http::get('pn', 1);
+        $intRn       = Reetsee_Http::get('rn', 10);
+        $strNewsInfo = Reetsee_Http::get('news_info', '');
+
+        if (0 !== strlen($strNewsInfo)) {
+            $arrNewsInfo = json_decode($strNewsInfo, true);
+        }
 
         $arrCurlConf = array(
             'CURLOPT_CONNECTTIMEOUT' => 10,

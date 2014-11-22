@@ -1,6 +1,15 @@
 <?php
 define("MODULE_PATH", dirname(__FILE__));
 
+function __module_autoload($strClassName) {
+    $arrPath = explode('_', $strClassName);
+    for ($i = 0; $i < count($arrPath) - 1; ++$i) {
+        $arrPath[$i] = strtolower($arrPath[$i]);
+    }
+    require_once MODULE_PATH . '/' . implode('/', $arrPath) . '.php';
+}
+spl_autoload_register('__module_autoload');
+
 $strActionPath = "";
 
 $strPathInfo = $_SERVER['PATH_INFO'];

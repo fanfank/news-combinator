@@ -4,6 +4,24 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <title><?php echo "吹水新闻-{$arrTpl['category']['title']}"; ?></title>
     <link rel="stylesheet" type="text/css" href="/static/css/entry.css">
+    <script type="text/javascript" src="/static/script/jquery-1.11.1.min.js"></script>
+    <script>
+    $(document).ready(function(){
+      $("#btn1").click(function(){
+            $.post("/comments",
+              {
+                ie:"utf-8",
+                pn:1,
+                rn:10,
+                news_info:'<?php echo trim(json_encode($arrTpl['news'])); ?>'
+              },
+              function(data,status){
+                alert("Data: " + data + "\nStatus: " + status);
+                $('#test').load(data);
+              });
+      })
+    })
+    </script>
 </head>
 <body>
     <?php 
@@ -19,6 +37,8 @@
         }
     ?>
     </div>
+    <h3 id="test">请点击下面的按钮，通过ajax获取评论。</h3>
+    <button id="btn1" type="button">获得评论</button>
     <?php
         include MODULE_PATH . '/html/template/bottom_navigation.html';
     ?>
