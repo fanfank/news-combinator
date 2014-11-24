@@ -8,20 +8,16 @@ class commentsAction extends Actions_ActionBase {
     public function process() {
         //获取外站评论
         $intPn       = Reetsee_Http::get('pn', 1);
-        $intRn       = Reetsee_Http::get('rn', 10);
-        $strNewsInfo = Reetsee_Http::get('news_info', '');
-
-        if (0 !== strlen($strNewsInfo)) {
-            $arrNewsInfo = json_decode($strNewsInfo, true);
-        }
+        $intRn       = Reetsee_Http::get('rn', 20);
+        $arrNewsInfo = Reetsee_Http::get('news_info', array());
 
         $arrCurlConf = array(
-            'CURLOPT_CONNECTTIMEOUT' => 10,
-            'CURLOPT_MAXREDIRS'      => 10,
-            'CURLOPT_RETURNTRANSFER' => 1,    
-            'CURLOPT_TIMEOUT'        => 15,
-            'CURLOPT_URL'            => NULL,
-            'CURLOPT_USERAGENT'      => 'phpfetcher',
+            CURLOPT_CONNECTTIMEOUT => 10,
+            CURLOPT_MAXREDIRS      => 10,
+            CURLOPT_RETURNTRANSFER => 1,    
+            CURLOPT_TIMEOUT        => 15,
+            CURLOPT_URL            => NULL,
+            CURLOPT_USERAGENT      => 'phpfetcher',
         );
 
         $arrComments = array();
@@ -33,7 +29,7 @@ class commentsAction extends Actions_ActionBase {
                 'entry' => $entry,
             );
             $this->setCurlConf($arrCurlConf, $arrInfo);
-            curl_setopt_array($objCurl);
+            curl_setopt_array($objCurl, $arrCurlConf);
 
             $strContent = curl_exec($objCurl);
             if (FALSE != $strContent) {
@@ -56,22 +52,22 @@ class commentsAction extends Actions_ActionBase {
                 break;
 
             case 'netease':
-                $arrExt = unserialize($arrInfo['ext']);
+                $arrExt = unserialize($arrInfo['info']['ext']);
 
                 $strDomain = 'http://comment.news.163.com';
-                $strReq    = "/data/{$arrExt['board_id']}/df/{$arrInfo['source_comment_id']}_1.html";
+                $strReq    = "/data/{$arrExt['board_id']}/df/{$arrInfo['entry']['source_comment_id']}_1.html";
 
                 break;
             case 'sina':
-                $arrExt = unserialize($arrInfo['ext']);
+                $arrExt = unserialize($arrInfo['entry']['ext']);
 
                 $strDomain = 'http://comment5.news.sina.com.cn';
-                $strReq    = "/page/info?format=json&channel={$arrExt['channel_id']}&newsid={$arrInfo['source_news_id']}&group=" . intval($arrExt['group']) . "&compress=1&ie=utf-8&oe=utf-8&page={$arrExt['pn']}&page_size={$arrExt['rn']}&jsvar=requestId_444";
+                $strReq    = "/page/info?format=json&channel={$arrExt['channel_id']}&newsid={$arrInfo['entry']['source_news_id']}&group=" . intval($arrExt['group']) . "&compress=1&ie=utf-8&oe=utf-8&page={$arrInfo['pn']}&page_size=20&jsvar=requestId_444";
 
                 break;
         }
         $strUrl = $strDomain . $strReq;
-        $arrCurlConf['CURLOPT_URL'] = $strUrl;
+        $arrCurlConf[CURLOPT_URL] = $strUrl;
     }
 
     /**
@@ -129,7 +125,7 @@ class commentsAction extends Actions_ActionBase {
                 $res = preg_match('#^var \w+=({.*});$#', $strContent, $matches);
 
                 $data = json_decode($matches[1], true);
-                $data = $data['hostPosts'];
+                $data = $data['hotPosts'];
 
                 $arrPathDict = array(
                     'source'  => 'netease',   
@@ -140,13 +136,13 @@ class commentsAction extends Actions_ActionBase {
                 break;
             case 'sina':
                 $data = json_decode($strContent, true);
-                $data = $data['result']['host_list'];
+                $data = $data['result']['hot_list'];
 
                 $arrPathDict = array(
                     'source'  => 'sina',   
-                    'user'    => 'nick',
-                    'time'    => 'time',
-                    'content' => 'content',
+                    'user'    => array('nick'),
+                    'time'    => array('time'),
+                    'content' => array('content'),
                 );
 
                 break;
@@ -199,19 +195,28 @@ class commentsAction extends Actions_ActionBase {
                 } else {
                     $value = &$comment;
                     foreach ($path as $field) {
-                        if (isset($value[$field])) {
+                        if ('1' === $field && 'netease' === $arrCm['source']) { //ugly code
+                            foreach ($value as $k => $v) {
+                                if (intval($field) < intval($k)) {
+                                    $field = $k;
+                                }
+                            }
+                        }
+
+                        if (is_array($value) && isset($value[$field])) {
                             $value = &$value[$field];
                         } else {
+                            unset($value);
                             $value = NULL;
-                            break;
                         }
                     }
 
                     if ('time' === $key && strlen(strval($value)) <= 12) {
                         //时间戳转换为日期格式
-                        $value = date("%Y-%m-%d %H:%M:%S", $value);
+                        $value = date("%Y-%m-%d %H:%M:%S", intval($value));
                     }
                     $arrCm[$key] = $value;
+                    unset($value);
                 }
             }
             $arrOutput[] = $arrCm;

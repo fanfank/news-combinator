@@ -13,11 +13,11 @@
                 ie:"utf-8",
                 pn:1,
                 rn:10,
-                news_info:'<?php echo trim(json_encode($arrTpl['news'])); ?>'
+                news_info:<?php echo json_encode($arrTpl['news']); ?>
               },
               function(data,status){
-                alert("Data: " + data + "\nStatus: " + status);
-                $('#test').load(data);
+                alert("Data: " + JSON.stringify(data) + "\nStatus: " + status);
+                $('#test').text(JSON.stringify(data));
               });
       })
     })
