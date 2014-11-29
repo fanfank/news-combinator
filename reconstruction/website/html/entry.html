@@ -4,29 +4,27 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <title><?php echo "吹水新闻-{$arrTpl['category']['title']}"; ?></title>
     <link rel="stylesheet" type="text/css" href="/static/css/entry.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/common-element.css">
     <script type="text/javascript" src="/static/js/jquery-1.11.1.min.js"></script>
-    <script>
+    <script type="text/javascript" src="/static/js/basic_funcs.js"></script>
+    <script type="text/javascript" src="/static/js/comments.js"></script>
+    <script type="text/javascript" src="/static/js/contents.js"></script>
+    <script type="text/javascript">
     $(document).ready(function(){
-      $("#btn1").click(function(){
-            $.post("/comments",
-              {
-                ie:"utf-8",
-                pn:1,
-                rn:10,
-                news_info:<?php echo json_encode($arrTpl['news']); ?>
-              },
-              function(data,status){
-                alert("Data: " + JSON.stringify(data) + "\nStatus: " + status);
-                $('#test').text(JSON.stringify(data));
-              });
-      })
-    })
+        init_contents(<?php echo json_encode($arrTpl['news']); ?>);
+        get_comments(<?php echo json_encode($arrTpl['news']); ?>);
+    });
     </script>
 </head>
 <body>
     <?php 
         include MODULE_PATH . '/html/template/top_navigation.html';
     ?>
+    <div class='returnTop' title='带你飞～'>
+        <span class='s'></span>
+        <span class='b'></span>
+        返回顶部
+    </div>
     <div id = "big_block">
     <?php
         foreach ($arrTpl['news'] as $news_entry) {
@@ -36,6 +34,38 @@
             echo "<br/>";
         }
     ?>
+    </div>
+
+    <div class="main_block">
+        <h1 id="head_title"><?php echo empty($arrTpl['category']['title'])?'吹水新闻':$arrTpl['category']['title'] ?></h1>
+        <hr id="head_title_underline"></hr>
+        <a class="homepage_btn float_banner" href=<?php echo "/#{$arrTpl['category']['id']}" ?>>返回主页</a>
+        <div class="sources_block">
+            <span class="sources_choose description">选择来源：</span>
+            <?php 
+                foreach ($arrTpl['news'] as $news_entry) {
+                    echo "<div id='tab_{$news_entry['source_news_id']}' class='source_icon'>";
+                    echo "<img src='/static/icons/{$news_entry['source_name']}.png' width='20px' height='20px'>";
+                    echo "</div>";
+                }
+            ?>
+            <div id="hide_source" class="hide_show_btn inline" title="收起">
+                <img src="/static/icons/hide_button.png">
+            </div>
+            <div id='show_source' class='hide_show_btn inline' title="展开">
+                <img src="/static/icons/show_button.png">
+            </div>
+        </div>
+        <hr class="normal_underline"></hr>
+        <div id="comment_abstract" class="comment_abstract">
+            <div class="description element_hover fast_title" title="获取自各新闻网站的热门评论">
+                <span>热门评论</span>
+                <img src="/static/icons/reference.png">
+                <span>：</span>
+            </div>
+            <div id="hot_comments">
+            </div>
+        </div>
     </div>
     <h3 id="test">请点击下面的按钮，通过ajax获取评论。</h3>
     <button id="btn1" type="button">获得评论</button>

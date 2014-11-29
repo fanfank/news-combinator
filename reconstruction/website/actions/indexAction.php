@@ -51,7 +51,13 @@ class indexAction {
         
         $data = array();
         foreach ($res as $entry) {
+            $entry['arr_uni_sources'] = array_unique(explode(',', $entry['source_names']));
             $data[$entry['day_time']][] = $entry;
+        }
+        foreach ($data as $day_time => &$news_entries) {
+            usort($news_entries, function ($a, $b) {
+                return count($a['arr_uni_sources']) < count($b['arr_uni_sources']);
+            });
         }
         include implode(DIRECTORY_SEPARATOR, array($HTML_DIR, 'index.html'));
         return 0;

@@ -55,6 +55,7 @@ class entryAction {
         }
 
         $arrCategory = $res[0];
+        //$arrCategory['arr_uni_sources'] = array_unique(explode(',', $entry['source_names']));
 
         $arrNews = array();
         if (!empty($arrCategory)) {

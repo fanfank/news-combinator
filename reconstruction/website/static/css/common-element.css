@@ -1,0 +1,39 @@
+.returnTop {
+    position  : fixed;
+    _position : absolute;
+    right     : 10px;
+    bottom    : 50px;
+    _bottom   : auto;
+    display   : none;
+    width     : 40px;
+    height    : 40px;
+    border    : 1px solid #61b72e;
+    border-radius : 4px;
+    background    : #fff;
+    box-shadow    : 0 0 5px #f5f5f5;
+    text-indent   : -9999px;
+    cursor        : pointer;
+    z-index       : 2;
+    opacity       : 70;
+    filter        : alpha(opacity=70);
+}
+.returnTop .s {
+    position : absolute;
+    top      : -2px;
+    _top     : -20px;
+    left     : 10px;
+    width    : 0;
+    height   : 0;
+    border-width : 10px;
+    border-color : transparent transparent #61b72e;
+    border-style : dashed dashed solid;
+}
+.returnTop .b {
+    position : absolute;
+    top      : 18px;
+    left     : 16px;
+    height   : 12px;
+    width    : 8px;
+    background : #61b72e;
+}
+
