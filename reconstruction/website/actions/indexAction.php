@@ -9,7 +9,7 @@ class indexAction {
     public function process() {
         $intRange = intval($_GET['range']);
         if (empty($intRange) || $intRange < 1 || MAX_RANGE < $intRange) {
-            $intRange = 2;
+            $intRange = 3;
         }
         
         $db = Reetsee_Db::initDb('reetsee_news', '127.0.0.1', 3306, 'root', '123abc', 'utf8');
