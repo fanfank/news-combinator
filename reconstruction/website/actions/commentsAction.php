@@ -52,7 +52,7 @@ class commentsAction extends Actions_ActionBase {
                 break;
 
             case 'netease':
-                $arrExt = unserialize($arrInfo['info']['ext']);
+                $arrExt = unserialize($arrInfo['entry']['ext']);
 
                 $strDomain = 'http://comment.news.163.com';
                 $strReq    = "/data/{$arrExt['board_id']}/df/{$arrInfo['entry']['source_comment_id']}_1.html";
