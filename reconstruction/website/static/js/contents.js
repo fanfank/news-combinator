@@ -46,6 +46,7 @@ function init_events() {
         var showtabid = 'content_' + $(this).attr('name');
         if (lastshowtabid != showtabid) {
             if (lastshowtabid != '') {
+                lastshowtabid = lastshowtabid.trim();
                 $('#' + lastshowtabid).hide();
             }
             $('#' + showtabid).show();

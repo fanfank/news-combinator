@@ -1,0 +1,50 @@
+body { 
+    background-color : #f6f5ec; 
+    font-family      : sans-serif; 
+    font-size        : 105%;
+}
+
+h1 {
+    color : #E0861A;
+}
+
+h2 {
+    color       : #005831;
+    font-family : STFangsong, STKaiti, FangSong;
+    font-weight : bold;
+}
+
+.entries_block {
+    margin : 0px 0px 0px 0px;
+}
+
+.entry {
+    display       : block;
+    margin        : 5px 0px 5px 0px;
+    overflow      : hidden;
+    text-overflow : clip;
+    white-space   : normal;
+}
+    
+.icons_block {
+    display       : inline-block;
+    white-space   : nowrap;
+    width : 50px;
+}
+
+.main_content {
+    margin    : 15px 0px 15px 5px;
+}
+
+.news_title {
+    color         : #0000CD;
+    font-family   : STKaiti;
+}
+
+.news_title_hover {
+    cursor : pointer;
+}
+
+#big_block {
+    margin-left : 5px;
+}
