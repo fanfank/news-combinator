@@ -211,9 +211,10 @@ class commentsAction extends Actions_ActionBase {
                         }
                     }
 
-                    if ('time' === $key && strlen(strval($value)) <= 12) {
-                        //时间戳转换为日期格式
-                        $value = date("%Y-%m-%d %H:%M:%S", intval($value));
+                    if ('time' === $key && strlen(strval($value)) > 12) {
+                        //日期格式转换为时间戳
+                        //$value = date("%Y-%m-%d %H:%M:%S", intval($value));
+                        $value = strtotime($value);
                     }
                     $arrCm[$key] = $value;
                     unset($value);

@@ -37,13 +37,13 @@ function init_contents(news_info) {
     }
 }
 
-function init_event() {
+function init_events() {
     $('.hide_show_btn').hide();
     var lastshowtabid = '';
 
     //show or hide passages
     $('.source_icon').click(function(){
-        var showtabid = $(this).attr('id');
+        var showtabid = 'content_' + $(this).attr('name');
         if (lastshowtabid != showtabid) {
             if (lastshowtabid != '') {
                 $('#' + lastshowtabid).hide();
