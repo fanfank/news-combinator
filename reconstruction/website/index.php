@@ -30,6 +30,12 @@ array_unshift($arrPathInfo, 'actions');
 $strActionClassName = end($arrPathInfo) . 'Action';
 $strActionPath = MODULE_PATH . DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, $arrPathInfo) . 'Action.php';
 
+//判断用户设备
+$_SERVER['DEVICE'] = 'PC';
+if (preg_match('#(mobile|nokia|iphone|ipad|android|samsung|htc|blackberry)#i', $_SERVER['USER_AGENT'])) {
+    $_SERVER['DEVICE'] = 'WAP';
+}
+
 if (!file_exists($strActionPath)) {
     echo "Oooops...Nothing here";
 } else {

@@ -3,8 +3,15 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <title>吹水新闻</title>
-    <link rel="stylesheet" type="text/css" href="/static/css/index.css">
+    <?php 
+        if ('PC' === $_SERVER['DEVICE']) {
+            echo "<link rel='stylesheet' type='text/css' href='/static/css/index.css'>";
+        } else {
+            echo "<link rel='stylesheet' type='text/css' href='/static/css/index_mobile.css'>";
+        }
+    ?>
     <link rel="stylesheet" type="text/css" href="/static/css/common-element.css">
+    <script type="text/javascript" src="/static/js/jquery-1.11.1.min.js"></script>
     <script type="text/javascript" src="/static/js/basic_funcs.js"></script>
     <script type="text/javascript">
         $(document).ready(function(){
@@ -15,7 +22,7 @@
     </script>
 </head>
 <body>
-    <div style="font-size:5px">注：本网站是个人毕业设计的展示阳历，所有内容均来自互联网，如有侵犯请马上联系作者<a href="http://weibo.com/csdbreadstealer" target="_black">微博</a>进行删除</div>
+    <div style="font-size:5px">注：本网站是个人毕业设计的展示样例，所有内容均来自互联网，如有侵犯请马上联系作者<a href="http://weibo.com/csdbreadstealer" target="_black">微博</a>进行删除</div>
     <h1>吹水新闻</h1>
     <div class='returnTop' title='带你飞～'>
         <span class='s'></span>

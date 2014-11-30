@@ -3,7 +3,13 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <title><?php echo "吹水新闻-{$arrTpl['category']['title']}"; ?></title>
-    <link rel="stylesheet" type="text/css" href="/static/css/entry.css">
+    <?php 
+        if ('PC' === $_SERVER['DEVICE']) {
+            echo "<link rel='stylesheet' type='text/css' href='/static/css/entry.css'>";
+        } else {
+            echo "<link rel='stylesheet' type='text/css' href='/static/css/entry_mobile.css'>";
+        }
+    ?>
     <link rel="stylesheet" type="text/css" href="/static/css/common-element.css">
     <script type="text/javascript" src="/static/js/jquery-1.11.1.min.js"></script>
     <script type="text/javascript" src="/static/js/basic_funcs.js"></script>
