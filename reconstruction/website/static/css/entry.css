@@ -1,10 +1,14 @@
 body {
-    font-family : sans-serif;
+    font-family : "Times New Roman",sans-serif;
     background  : #eee;
 }
 
 h1 {
     color : #377ba8;
+}
+
+a {
+    text-decoration : none;
 }
 
 .comment_abstract {

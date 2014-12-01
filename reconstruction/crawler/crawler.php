@@ -92,7 +92,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         $objContent = $page->sel('//p');
         for ($i = 0; $i < count($objContent); ++$i) {
             //$arrContent[] = $objContent[$i]->plaintext;
-            $strContent .= ($objContent[$i]->plaintext . "\n");
+            $strContent .= "<p>" . ($objContent[$i]->plaintext . "\n") . "</p>";
         }
 
         $matches = array();
@@ -151,7 +151,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         $objContent = $page->sel('//p');
         for ($i = 0; $i < count($objContent); ++$i) {
             //$arrContent[] = $objContent[$i]->plaintext;
-            $strContent .= ($objContent[$i]->plaintext . "\n");
+            $strContent .= "<p>" . ($objContent[$i]->plaintext . "\n") . "</p>";
         }
 
         $matches = array();
@@ -210,7 +210,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         $objContent = $page->sel('//p');
         for ($i = 0; $i < count($objContent); ++$i) {
             //$arrContent[] = $objContent[$i]->plaintext;
-            $strContent .= ($objContent[$i]->plaintext . "\n");
+            $strContent .= "<p>" . ($objContent[$i]->plaintext . "\n") . "</p>";
         }
 
         $matches = array();

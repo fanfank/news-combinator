@@ -34,11 +34,9 @@ h2 {
 
 .news_title {
     color       : #0000CD;
+    cursor      : pointer;
     font-family : STKaiti;
-}
-
-.news_title_hover {
-    cursor : pointer;
+    text-decoration : none;
 }
 
 #big_block {
