@@ -64,19 +64,20 @@ int main(void) {
         }
 
         //设置client fd为非阻塞模式
+        /*
         int flags = fcntl(clfd, F_GETFL, 0);
-        if (fcntl(fd, F_SETFL, flags & O_NONBLOCK) < 0) {
+        if (fcntl(clfd, F_SETFL, flags | O_NONBLOCK) < 0) {
             printf("set clfd block flag failed\n");
             close(clfd);
             continue;
         }
+        */
 
         clientn++;
         printf("client %d comes.\n", clientn);
 
         int  n;
         char buf[BUFLEN];
-
 
         //读取数据
         while ((n = read(clfd, buf, 1)) > 0) {
