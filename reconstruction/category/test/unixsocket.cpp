@@ -23,13 +23,11 @@ int main(void) {
     }
 
     //设置套接字为阻塞模式
-    /*
     int flags = fcntl(fd, F_GETFL, 0);
     if (fcntl(fd, F_SETFL, flags & ~O_NONBLOCK) < 0) {
         printf("set fd block flag failed\n");
         return -1;
     }
-    */
 
     //绑定地址
     size = offsetof(struct sockaddr_un, sun_path) + strlen(un.sun_path);
@@ -65,6 +63,14 @@ int main(void) {
             return -2;
         }
 
+        //设置client fd为非阻塞模式
+        int flags = fcntl(clfd, F_GETFL, 0);
+        if (fcntl(fd, F_SETFL, flags & O_NONBLOCK) < 0) {
+            printf("set clfd block flag failed\n");
+            close(clfd);
+            continue;
+        }
+
         clientn++;
         printf("client %d comes.\n", clientn);
 
@@ -73,12 +79,15 @@ int main(void) {
 
 
         //读取数据
-        while ((n = recv(clfd, buf, BUFLEN - 1, 0)) > 0) {
+        while ((n = read(clfd, buf, 1)) > 0) {
             buf[n] = '\0';
             printf("%s", buf);
+            fflush(stdout);
             //send(clfd, buf, n, 0);
         }
         printf("\n");
+        printf("All received\n");
+        fflush(stdout);
 
         if (n < 0) {
             printf("recv error\n");
