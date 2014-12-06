@@ -1,0 +1,11 @@
+    4       <= 32bit int      1   payload length                            1
+| [type] | [payload length] | $ | payload ...    | odd check for type + payload length + $ + payload |
+
+type = 0000   //SYN packet
+    payload = //number of DATA packets
+
+type = 0001   //FIN packet
+    payload = //any custome data
+
+type = 0002   //DATA packet
+    payload = //any custome data
