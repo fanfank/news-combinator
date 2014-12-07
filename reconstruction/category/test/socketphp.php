@@ -5,7 +5,9 @@ function odd_check_byte($data) {
     $cnt = 0;
     for ($i = 0, $len = strlen($data); $i < $len; ++$i) {
         foreach ($bits as $bit) {
-            $cnt += $bit & ord($data[$i]);
+            if ($bit & ord($data[$i])) {
+                $cnt += 1;
+            }
         }
     }
 
@@ -88,7 +90,7 @@ function get_packets(&$fp, $last_buf = "", $target_type = "0000", $nr_packets = 
     $type         = "";
     $seperator    = '$';
     $payload_len  = 0;
-    $payload_read = strlen($buf);
+    $payload_read = 0;
     $payload      = "";
 
     while (!feof($fp) && $nr_packets > 0) {
