@@ -12,6 +12,54 @@
 
 char socket_path[128] = "./unixsocket.socket";
 
+vector<vector<string> > get_packets(const int *p_clfd, string last_buf, string target_type, int nr_packets) {
+
+}
+
+int read_packets(const int *p_clfd, map<string, vector<string> > *p_packets) {
+    (*p_packets)["syn"]  = vector<string>();
+    (*p_packets)["data"] = vector<string>();
+    (*p_packets)["fin"]  = vector<string>();
+
+    vector<vector<string> > res; //res[0] means last_buf
+                                 //res[1] means data
+
+    //get SYN packets
+    res = get_packets(p_clfd, string(""), string("0000"), 1);
+    if (res.size() < 2 || res[0].empty() || res[1].empty()) {
+        printf("read for SYN packets error\n");
+        return -1;
+    }
+    (*p_packets)["syn"] = res[1];
+    int nr_packets = atoi((*p_packets)["syn"].c_str());
+
+    //get DATA packets
+    res = get_packets(p_clfd, res[0][0], string("0002"), nr_packets);
+    if (res.size() < 2 || res[0].empty() || res[1].empty()) {
+        printf("read for DATA packets error\n");
+        return -1;
+    }
+    (*p_packets)["data"] = res[1];
+
+    //get FIN packets
+    res = get_packets(p_clfd, res[0][0], string("0001"), 1);
+    if (res.size() < 2 || res[0].empty() || res[1].empty()) {
+        printf("read for FIN packets error\n");
+        return -1;
+    }
+    (*p_packets)["fin"] = res[1];
+    
+    return 0;
+}
+
+string handle_packets() {
+
+}
+
+int send_packets() {
+
+}
+
 int main(void) {
     int fd, size;
     struct sockaddr_un un;
@@ -63,41 +111,29 @@ int main(void) {
             return -2;
         }
 
-        //设置client fd为非阻塞模式
-        /*
-        int flags = fcntl(clfd, F_GETFL, 0);
-        if (fcntl(clfd, F_SETFL, flags | O_NONBLOCK) < 0) {
-            printf("set clfd block flag failed\n");
-            close(clfd);
-            continue;
-        }
-        */
-
         clientn++;
         printf("client %d comes.\n", clientn);
 
         int  n;
         char buf[BUFLEN];
+        int  errno;
 
-        //读取数据
-        while ((n = read(clfd, buf, 1)) > 0) {
-            buf[n] = '\0';
-            printf("%s", buf);
-            fflush(stdout);
-            //send(clfd, buf, n, 0);
-        }
-        printf("\n");
-        printf("All received\n");
-        fflush(stdout);
+        map<string, vector<string> > packets;
 
-        if (n < 0) {
-            printf("recv error\n");
+        errno = read_packets(&clfd, &packets);
+        if (errno != 0) {
+            printf("read packets error\n");
+            return -1;
         }
 
-        n = snprintf(buf, BUFLEN - 1, "%d client", clientn);
-        send(clfd, buf, n, 0);
+        string res = handle_packets(&packets["data"]);
 
-        printf("client %d goes.\n", clientn);
+        errno = send_packets(res);
+        if (errno != 0) {
+            printf("read packets error\n");
+            return -1;
+        }
+
         close(clfd);
     }
 
