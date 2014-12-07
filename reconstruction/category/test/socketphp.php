@@ -14,9 +14,9 @@ function odd_check_byte($data) {
     $odd_check_byte = '';
 
     if ($cnt % 2) {
-        $odd_check_byte = chr(1);
-    } else {
         $odd_check_byte = chr(0);
+    } else {
+        $odd_check_byte = chr(1);
     }
 
     return $odd_check_byte;

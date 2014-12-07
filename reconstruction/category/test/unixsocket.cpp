@@ -4,6 +4,7 @@
 #include <signal.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <string>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <time.h>
@@ -11,6 +12,8 @@
 #include <unistd.h>
 
 #define BUFLEN  128
+#define PAYLOADLEN 32
+#define DEUBG
 
 char socket_path[128] = "./unixsocket.socket";
 
@@ -26,12 +29,12 @@ char odd_check_byte(string data) {
         }
     }
     
-    char oc_byte = '';
+    char oc_byte;
 
     if (cnt % 2) {
-        oc_byte = static_cast<char>(1);
-    } else {
         oc_byte = static_cast<char>(0);
+    } else {
+        oc_byte = static_cast<char>(1);
     }
 
     return oc_byte;
@@ -88,7 +91,7 @@ vector<vector<string> > get_packets(const int *p_clfd, string last_buf, string t
                     }
                     break;
                 }
-                payload_len = buf.substr(st, ed - st);
+                payload_len = atoi(buf.substr(st, ed - st).c_str());
 
                 payload_read = 0;
                 payload      = "";
@@ -97,7 +100,7 @@ vector<vector<string> > get_packets(const int *p_clfd, string last_buf, string t
             }
 
             //read payload
-            ed = st + payload_len - payload_read.size();
+            ed = st + payload_len - payload_read;
             if (ed - st < 0) {
                 printf("compute data ed error\n");
                 return vector<vector<string> >();
@@ -134,7 +137,7 @@ vector<vector<string> > get_packets(const int *p_clfd, string last_buf, string t
             st     = ed;
             status = 0;
             --nr_packet;
-        } while (0 == status)
+        } while (0 == status && nr_packet > 0)
 
         if (nr_packet > 0) {
             char tmp_buf[BUFLEN];
@@ -224,7 +227,7 @@ vector<string> pack_data(string data, int payload_mx_len) {
 
     for (int i = 0, len = data.size(); i < len; i += payload_mx_len) {
         string payload   = substr(data, i, payload_mx_len);
-        string type      = "0001";
+        string type      = "0002";
         int payload_len  = payload.size();
         string seperator = "$";
 
@@ -254,10 +257,17 @@ string pack_fin() {
 }
 
 int send_packets(const int *p_clfd, string data) {
-    vector<string> data_packets = pack_data(data, 32);
+    vector<string> data_packets = pack_data(data, PAYLOADLEN);
     string           syn_packet = pack_syn(data_packets.size());
     string           fin_packet = pack_fin();
 
+#ifdef DEBUG
+    printf("send syn packet:%s\n", syn_packet.c_str());
+    for (int i = 0, len = data_packets.size(); i < len; ++i) {
+        printf("send data packet:%s\n", data_packets[i].c_str());
+    }
+    printf("send fin packet:%s\n", fin_packet.c_str());
+#endif
     send(*p_clfd, syn_packet.c_str(), syn_packet.size(), 0);
     for (int i = 0, len = data_packets.size(); i < len; ++i) {
         send(*p_clfd, data_packets[i].c_str(), data_packets[i].size(), 0);
@@ -331,6 +341,13 @@ int main(void) {
             printf("read packets error\n");
             return -1;
         }
+#ifdef DEBUG
+        for (map<string, vector<string> >::iterator p = packets.begin(); p != packets.end(); p++) {
+            for (int i = 0, len = (p->second).size(); i < len; ++i) {
+                printf("read %s packet:%s\n", (p->first).c_str(), (p->second)[i].c_str());
+            }
+        }
+#endif
 
         string res = handle_packets(&packets["data"]);
 
