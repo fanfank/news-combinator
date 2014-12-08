@@ -11,15 +11,15 @@ function odd_check_byte($data) {
         }
     }
 
-    $odd_check_byte = '';
+    $oc_byte = '';
 
     if ($cnt % 2) {
-        $odd_check_byte = chr(0);
+        $oc_byte = chr(48);
     } else {
-        $odd_check_byte = chr(1);
+        $oc_byte = chr(49);
     }
 
-    return $odd_check_byte;
+    return $oc_byte;
 }
 
 function pack_syn($num_packets) {
@@ -54,7 +54,7 @@ function pack_data($data, $payload_mx_len = 4096) {
     $arrDataPackets = array();
     for ($i = 0, $len = strlen($data); $i < $len; $i += $payload_mx_len) {
         $payload = substr($data, $i, $payload_mx_len);
-        $type        = "0001";
+        $type        = "0002";
         $payload_len = strlen($payload);
         $seperator   = '$';
 
@@ -87,13 +87,13 @@ function pack_data($data, $payload_mx_len = 4096) {
 function get_packets(&$fp, $last_buf = "", $target_type = "0000", $nr_packets = 1) {
     $status       = 0;  //0 means finished reading the last packet
                         //1 means continue reading the packet's payload
-    $type         = "";
-    $seperator    = '$';
     $payload_len  = 0;
     $payload_read = 0;
+    $type         = "";
+    $seperator    = '$';
     $payload      = "";
 
-    while (!feof($fp) && $nr_packets > 0) {
+    while ($nr_packets > 0) {
         $buf     = $last_buf;
         $buf_len = strlen($buf);
 
@@ -106,12 +106,16 @@ function get_packets(&$fp, $last_buf = "", $target_type = "0000", $nr_packets = 
                 //read for type
                 $ed = $st + 4;
                 if ($ed > $buf_len) {
-                    $last_buf = strval(substr($buf, $st_old));
+                    if ($st_old >= strlen($buf)) {
+                        $last_buf = "";
+                    } else {
+                        $last_buf = substr($buf, $st_old);
+                    }
                     break;
                 }
                 $type = substr($buf, $st, $ed - $st);
                 if ($target_type !== $type) {
-                    echo "read $target_type type error\n";
+                    echo "read $target_type type error, get $type instead\n";
                     return false;
                 }
 
@@ -119,10 +123,14 @@ function get_packets(&$fp, $last_buf = "", $target_type = "0000", $nr_packets = 
                 $st = $ed;
                 for (; $ed < $buf_len && $seperator !== $buf[$ed]; $ed++) {}
                 if ($ed >= $buf_len || $seperator !== $buf[$ed]) {
-                    $last_buf = strval(substr($buf, $st_old));
+                    if ($st_old >= strlen($buf)) {
+                        $last_buf = "";
+                    } else {
+                        $last_buf = substr($buf, $st_old);
+                    }
                     break;
                 }
-                $payload_len = substr($buf, $st, $ed - $st);
+                $payload_len = intval(substr($buf, $st, $ed - $st));
 
                 $payload_read = 0;
                 $payload      = "";
@@ -131,7 +139,7 @@ function get_packets(&$fp, $last_buf = "", $target_type = "0000", $nr_packets = 
             }
 
             //read payload
-            $ed = $st + $payload_len - strlen($payload_read);
+            $ed = $st + $payload_len - $payload_read;
             if ($ed - $st < 0) {
                 echo "compute data ed error\n";
                 return false;
@@ -152,30 +160,37 @@ function get_packets(&$fp, $last_buf = "", $target_type = "0000", $nr_packets = 
             //read odd check byte
             $st = $ed;
             $ed = $st + 1;
-            if ($ed >= $buf_len) {
+            if ($ed > $buf_len) {
                 $last_buf = "";
                 break;
             }
 
-            $odd_check_byte = substr($buf, $st, $ed - $st);
+            $oc_byte = substr($buf, $st, $ed - $st);
             $packet = $type . $payload_len . $seperator . $payload;
-            if ($odd_check_byte !== odd_byte_check($packet)) {
-                echo "odd_check_byte not match\n";
+            if ($oc_byte !== odd_check_byte($packet)) {
+                echo "oc_byte not match, packet is [$packet]\n";
+                echo "DEBUG $oc_byte vs " . odd_check_byte($packet) . "\n";
                 return false;
             }
 
-            $arrPacket['data'][] = $payload;
+            $arrPackets['data'][] = $payload;
             $st = $ed;
             $status = 0;
-            $nr_packet--;
-        } while (0 === $status)
+            if (0 >= --$nr_packets) {
+                $last_buf = substr($buf, $st);
+                break;
+            }
+        } while (0 === $status && $nr_packets > 0);
 
-        if ($nr_packet > 0) {
+        if ($nr_packets > 0) {
             $last_buf .= fread($fp, 128);
         }
     }
 
-    if ($nr_packet > 0) {
+    if ($nr_packets > 0) {
+        //echo "nr_packet $nr_packets\n";
+        //$arrPackets['last_buf'] = $last_buf;
+        //echo print_r($arrPackets, true) . "\n";
         echo "receive data packet error, some are missed\n";
         return false;
     }
@@ -200,6 +215,7 @@ function read_packets(&$fp) {
     }
     foreach ($arrRes['data'] as $packet) {
         $arrPackets['syn'][] = $packet;
+        //echo "SYN:$packet\n";
     }
 
     //get DATA packets
@@ -210,6 +226,7 @@ function read_packets(&$fp) {
     }
     foreach ($arrRes['data'] as $packet) {
         $arrPackets['data'][] = $packet;
+        //echo "DATA:$packet\n";
     }
 
     //get FIN packets
@@ -220,6 +237,7 @@ function read_packets(&$fp) {
     }
     foreach ($arrRes['data'] as $packet) {
         $arrPackets['fin'][] = $packet;
+        //echo "FIN:$packet\n";
     }
 
     return $arrPackets;
@@ -227,6 +245,7 @@ function read_packets(&$fp) {
 
 function main() {
     $fp = fsockopen("unix://./unixsocket.socket", -1, $errno, $errstr, 0.1);
+    echo "got fp\n";
     if (!$fp) {
         echo "$errstr ($errno)\n";
     } else {
@@ -235,11 +254,14 @@ function main() {
         $arrDataPackets = pack_data($str);
         $syn_packet     = pack_syn(count($arrDataPackets));
         $fin_packet     = pack_fin();
+
+        echo "syn_packet is [$syn_packet], length is [" . strlen($syn_packet) . "]\n";
+
         fwrite($fp, $syn_packet, strlen($syn_packet));
-        foreach ($arrPackets as $data_packet) {
+        foreach ($arrDataPackets as $data_packet) {
             fwrite($fp, $data_packet, strlen($data_packet));
         }
-        fwrite($fp, $fin_Packet, strlen($fin_packet));
+        fwrite($fp, $fin_packet, strlen($fin_packet));
         echo "written something\n";
     
         $arrPackets = read_packets($fp);

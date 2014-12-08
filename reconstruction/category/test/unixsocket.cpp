@@ -4,6 +4,7 @@
 #include <signal.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -13,9 +14,17 @@
 
 #define BUFLEN  128
 #define PAYLOADLEN 32
-#define DEUBG
+#define DEBUG
+
+using namespace std;
 
 char socket_path[128] = "./unixsocket.socket";
+
+string _itoa(int num) {
+    char buf[BUFLEN];
+    sprintf(buf, "%d", num);
+    return string(buf);
+}
 
 char odd_check_byte(string data) {
     static const int bits[8] = {1, 2, 4, 8, 16, 32, 64, 128};
@@ -32,15 +41,19 @@ char odd_check_byte(string data) {
     char oc_byte;
 
     if (cnt % 2) {
-        oc_byte = static_cast<char>(0);
+        oc_byte = '0';
     } else {
-        oc_byte = static_cast<char>(1);
+        oc_byte = '1';
     }
+
+#ifdef DEBUG
+    printf("oc byte for packet [%s] is [%c], cnt is [%d]\n", data.c_str(), oc_byte, cnt);
+#endif
 
     return oc_byte;
 }
 
-vector<vector<string> > get_packets(const int *p_clfd, string last_buf, string target_type, int nr_packets) {
+vector<vector<string> > get_packets(const int * const p_clfd, string last_buf, string target_type, int nr_packets) {
     vector<vector<string> > packets;
     packets.push_back(vector<string>());
     packets.push_back(vector<string>());
@@ -76,7 +89,7 @@ vector<vector<string> > get_packets(const int *p_clfd, string last_buf, string t
                 }
                 type = buf.substr(st, ed - st);
                 if (target_type != type) {
-                    printf("read %s type error\n", target_type.c_str());
+                    printf("read %s type error, get [%s] instead\n", target_type.c_str(), type.c_str());
                     return vector<vector<string> >();
                 }
 
@@ -121,27 +134,34 @@ vector<vector<string> > get_packets(const int *p_clfd, string last_buf, string t
             //read odd check byte
             st = ed;
             ed = st + 1;
-            if (ed >= buf_len) {
+            if (ed > buf_len) {
                 last_buf = "";
                 break;
             }
 
-            char oc_byte = buf.substr(st, ed - st);
-            string packet = type + string(itoa(payload_len)) + seperator + payload;
+            char oc_byte = (buf.substr(st, ed - st))[0];
+            string packet = type + string(_itoa(payload_len)) + seperator + payload;
             if (oc_byte != odd_check_byte(packet)) {
                 printf("odd check byte not match\n");
+#ifdef DEBUG
+                printf("packet:%s\n", packet.c_str());
+                printf("DEBUG:%c vs %c\n", oc_byte, odd_check_byte(packet));
+#endif
                 return vector<vector<string> >();
             }
 
             packets[1].push_back(payload);
             st     = ed;
             status = 0;
-            --nr_packet;
-        } while (0 == status && nr_packet > 0)
+            if (0 >= --nr_packets) {
+                last_buf = buf.substr(st);
+                break;
+            }
+        } while (0 == status && nr_packets > 0);
 
-        if (nr_packet > 0) {
+        if (nr_packets > 0) {
             char tmp_buf[BUFLEN];
-            n = read(clfd, tmp_buf, BUFLEN - 1);
+            n = read(*p_clfd, tmp_buf, BUFLEN - 1);
             if (n < 0) {
                 printf("recv error\n");
             }
@@ -154,7 +174,7 @@ vector<vector<string> > get_packets(const int *p_clfd, string last_buf, string t
         }
     }
 
-    if (nr_packet > 0) {
+    if (nr_packets > 0) {
         printf("receive data packet error, some are missed\n");
         return vector<vector<string> >();
     }
@@ -163,7 +183,7 @@ vector<vector<string> > get_packets(const int *p_clfd, string last_buf, string t
     return packets;
 }
 
-int read_packets(const int *p_clfd, map<string, vector<string> > *p_packets) {
+int read_packets(const int * const p_clfd, map<string, vector<string> > *p_packets) {
     (*p_packets)["syn"]  = vector<string>();
     (*p_packets)["data"] = vector<string>();
     (*p_packets)["fin"]  = vector<string>();
@@ -178,7 +198,7 @@ int read_packets(const int *p_clfd, map<string, vector<string> > *p_packets) {
         return -1;
     }
     (*p_packets)["syn"] = res[1];
-    int nr_packets = atoi((*p_packets)["syn"].c_str());
+    int nr_packets = atoi((*p_packets)["syn"][0].c_str());
 
     //get DATA packets
     res = get_packets(p_clfd, res[0][0], string("0002"), nr_packets);
@@ -201,22 +221,29 @@ int read_packets(const int *p_clfd, map<string, vector<string> > *p_packets) {
 
 string handle_packets(const vector<string> *p_data) {
     //TODO
-    string res = "";
-    for (int i = 0; i < 531; ++i) {
+    /*
+    string res = "from_server:";
+    for (int i = 0, len = (*p_data).size(); i < len; ++i) {
+        res += (*p_data)[i];
+    }
+    */
+
+    string res = "from_server:";
+    for (int i = 0; i < 1333; ++i) {
         res += "哈";
     }
     return res;
 }
 
 string pack_syn(int num_packets) {
-    string payload   = string(itoa(num_packets));
+    string payload   = string(_itoa(num_packets));
     string type      = "0000";
     int payload_len  = payload.size();
     string seperator = "$";
 
-    string packet = type + string(itoa(payload_len)) + seperator + payload;
+    string packet = type + string(_itoa(payload_len)) + seperator + payload;
 
-    char oc_type = odd_check_byte(packet);
+    char oc_byte = odd_check_byte(packet);
     packet.append(1, oc_byte);
 
     return packet;
@@ -226,14 +253,14 @@ vector<string> pack_data(string data, int payload_mx_len) {
     vector<string> packets;
 
     for (int i = 0, len = data.size(); i < len; i += payload_mx_len) {
-        string payload   = substr(data, i, payload_mx_len);
+        string payload   = data.substr(i, payload_mx_len);
         string type      = "0002";
         int payload_len  = payload.size();
         string seperator = "$";
 
-        string packet = type + string(itoa(payload_len)) + seperator + payload;
+        string packet = type + string(_itoa(payload_len)) + seperator + payload;
 
-        char oc_type = odd_check_byte(packet);
+        char oc_byte = odd_check_byte(packet);
         packet.append(1, oc_byte);
 
         packets.push_back(packet);
@@ -248,7 +275,7 @@ string pack_fin() {
     int payload_len  = payload.size();
     string seperator = "$";
 
-    string packet = type + string(itoa(payload_len)) + seperator + payload;
+    string packet = type + string(_itoa(payload_len)) + seperator + payload;
 
     char oc_byte  = odd_check_byte(packet);
     packet.append(1, oc_byte);
@@ -256,7 +283,7 @@ string pack_fin() {
     return packet;
 }
 
-int send_packets(const int *p_clfd, string data) {
+int send_packets(const int * const p_clfd, string data) {
     vector<string> data_packets = pack_data(data, PAYLOADLEN);
     string           syn_packet = pack_syn(data_packets.size());
     string           fin_packet = pack_fin();
@@ -330,16 +357,26 @@ int main(void) {
         clientn++;
         printf("client %d comes.\n", clientn);
 
-        int  n;
-        char buf[BUFLEN];
+        //int n = 0;
+        //char buf[BUFLEN];
+        //while ((n = read(clfd, buf, BUFLEN-1)) > 0) {
+            //buf[n] = '\0';
+            //printf("%s", buf);
+            //fflush(stdout);
+            //send(clfd, buf, n, 0);
+        //}
+        //printf("\n");
+        //exit(-1);
+
         int  errno;
 
         map<string, vector<string> > packets;
 
         errno = read_packets(&clfd, &packets);
         if (errno != 0) {
-            printf("read packets error\n");
-            return -1;
+            printf("read packets error, closing clfd\n");
+            close(clfd);
+            continue;
         }
 #ifdef DEBUG
         for (map<string, vector<string> >::iterator p = packets.begin(); p != packets.end(); p++) {
@@ -351,11 +388,12 @@ int main(void) {
 
         string res = handle_packets(&packets["data"]);
 
-        errno = send_packets(res);
+        errno = send_packets(&clfd, res);
         if (errno != 0) {
             printf("read packets error\n");
             return -1;
         }
+        //sleep(10);
 
         close(clfd);
     }
