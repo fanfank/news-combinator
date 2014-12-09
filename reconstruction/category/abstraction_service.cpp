@@ -13,10 +13,15 @@
 #include <time.h>
 #include <vector>
 #include <unistd.h>
-#include "MixSegment.hpp"
+//#include "MixSegment.hpp"
 #include "KeywordExtractor.hpp"
-#include "PosTagger.hpp"
+//#include "PosTagger.hpp"
 using namespace CppJieba;
+const char * const dict_path       = "./dict/jieba.dict.utf8";
+const char * const model_path      = "./dict/hmm_model.utf8";
+const char * const idf_path        = "./dict/idf.utf8";
+const char * const stop_words_path = "./dict/stop_words.utf8";
+const char * const user_dict_path  = "./dict/user.dict.utf8";
 
 #define BUFLEN  128
 #define PAYLOADLEN 32
@@ -24,6 +29,116 @@ using namespace CppJieba;
 using namespace std;
 
 char socket_path[128] = "./unixsocket.socket";
+
+string _itoa(int num);
+char   odd_check_byte(string data);
+
+vector<vector<string> > get_packets(const int * const p_clfd, string last_buf, string target_type, int nr_packets);
+string handle_packets(const vector<string> *p_data);
+int    read_packets(const int * const p_clfd, map<string, vector<string> > *p_packets);
+int    send_packets(const int * const p_clfd, string data);
+
+string         pack_syn(int num_packets);
+vector<string> pack_data(string data, int payload_mx_len);
+string         pack_fin();
+
+int main(void) {
+    int fd, size;
+    struct sockaddr_un un;
+    un.sun_family = AF_UNIX;
+    strcpy(un.sun_path, socket_path);
+    if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
+        printf("socket failed\n");
+        return -1;
+    }
+
+    //设置套接字为阻塞模式
+    int flags = fcntl(fd, F_GETFL, 0);
+    if (fcntl(fd, F_SETFL, flags & ~O_NONBLOCK) < 0) {
+        printf("set fd block flag failed\n");
+        return -1;
+    }
+
+    //绑定地址
+    size = offsetof(struct sockaddr_un, sun_path) + strlen(un.sun_path);
+    unlink(socket_path);
+    if (bind(fd, (struct sockaddr *)&un, size) < 0) {
+        printf("bind failed\n");
+        return -1;
+    }
+
+    printf("UNIX domain socket bound\n");
+
+    //监听
+    if (listen(fd, 5) < 0) {
+        printf("listen failed\n");
+        close(fd);
+        return -1;
+    }
+
+    printf("Waiting for clients\n");
+
+    //如果服务端在send时客户端关闭了，那么服务端会因为send的一个feature而挂掉
+    //要将send发出的信号设置为忽略状态，否则默认的信号处理函数会crash这个程序
+    //参见http://www.gnu.org/savannah-checkouts/gnu/libc/manual/html_node/Sending-Data.html
+    signal(SIGPIPE, SIG_IGN);
+
+    //循环处理
+    int clientn = 0;
+    while(true) {
+        int clfd;
+
+        if ((clfd = accept(fd, NULL, NULL)) < 0) {
+            printf("accept error\n");
+            return -2;
+        }
+
+        clientn++;
+        printf("client %d comes.\n", clientn);
+
+        //int n = 0;
+        //char buf[BUFLEN];
+        //while ((n = read(clfd, buf, BUFLEN-1)) > 0) {
+            //buf[n] = '\0';
+            //printf("%s", buf);
+            //fflush(stdout);
+            //send(clfd, buf, n, 0);
+        //}
+        //printf("\n");
+        //exit(-1);
+
+        int  errno;
+
+        map<string, vector<string> > packets;
+
+        errno = read_packets(&clfd, &packets);
+        if (errno != 0) {
+            printf("read packets error, closing clfd\n");
+            close(clfd);
+            continue;
+        }
+#ifdef DEBUG
+        for (map<string, vector<string> >::iterator p = packets.begin(); p != packets.end(); p++) {
+            for (int i = 0, len = (p->second).size(); i < len; ++i) {
+                printf("read %s packet:%s\n", (p->first).c_str(), (p->second)[i].c_str());
+            }
+        }
+#endif
+
+        string res = handle_packets(&packets["data"]);
+
+        errno = send_packets(&clfd, res);
+        if (errno != 0) {
+            printf("read packets error\n");
+            return -1;
+        }
+        //sleep(10);
+
+        close(clfd);
+    }
+
+    return 0;
+}
 
 string _itoa(int num) {
     char buf[BUFLEN];
@@ -225,7 +340,23 @@ int read_packets(const int * const p_clfd, map<string, vector<string> > *p_packe
 }
 
 string handle_packets(const vector<string> *p_data) {
+    string client_data = "";
+    for (int i = 0, len = (*p_data).size(); i < len; ++i) {
+        client_data += (*p_data)[i];
+    }
+
+    const int num_stopwords = 7;
+    string stopwords[num_stopwords] = {".", "。", "!", "！", "?", "？", "\n"};
+    vector<string> sentences;
+    sentences.push_back(client_data);
+    for (int i = 0; i < num_stopwords; ++i) {
+        split_contents(&sentences, stopwords[i]);
+    }
     //TODO
+
+    //extractor, wordweights
+
+    extractor.extract(client_data, wordweights, KEYWORDNUM);
     /*
     string res = "from_server:";
     for (int i = 0, len = (*p_data).size(); i < len; ++i) {
@@ -233,11 +364,13 @@ string handle_packets(const vector<string> *p_data) {
     }
     */
 
+    /*
     string res = "from_server:";
     for (int i = 0; i < 1333; ++i) {
         res += "哈";
     }
     return res;
+    */
 }
 
 string pack_syn(int num_packets) {
@@ -305,103 +438,5 @@ int send_packets(const int * const p_clfd, string data) {
         send(*p_clfd, data_packets[i].c_str(), data_packets[i].size(), 0);
     }
     send(*p_clfd, fin_packet.c_str(), fin_packet.size(), 0);
-    return 0;
-}
-
-int main(void) {
-    int fd, size;
-    struct sockaddr_un un;
-    un.sun_family = AF_UNIX;
-    strcpy(un.sun_path, socket_path);
-    if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
-        printf("socket failed\n");
-        return -1;
-    }
-
-    //设置套接字为阻塞模式
-    int flags = fcntl(fd, F_GETFL, 0);
-    if (fcntl(fd, F_SETFL, flags & ~O_NONBLOCK) < 0) {
-        printf("set fd block flag failed\n");
-        return -1;
-    }
-
-    //绑定地址
-    size = offsetof(struct sockaddr_un, sun_path) + strlen(un.sun_path);
-    unlink(socket_path);
-    if (bind(fd, (struct sockaddr *)&un, size) < 0) {
-        printf("bind failed\n");
-        return -1;
-    }
-
-    printf("UNIX domain socket bound\n");
-
-    //监听
-    if (listen(fd, 5) < 0) {
-        printf("listen failed\n");
-        close(fd);
-        return -1;
-    }
-
-    printf("Waiting for clients\n");
-
-    //如果服务端在send时客户端关闭了，那么服务端会因为send的一个feature而挂掉
-    //要将send发出的信号设置为忽略状态，否则默认的信号处理函数会crash这个程序
-    //参见http://www.gnu.org/savannah-checkouts/gnu/libc/manual/html_node/Sending-Data.html
-    signal(SIGPIPE, SIG_IGN);
-
-    //循环处理
-    int clientn = 0;
-    while(true) {
-        int clfd;
-
-        if ((clfd = accept(fd, NULL, NULL)) < 0) {
-            printf("accept error\n");
-            return -2;
-        }
-
-        clientn++;
-        printf("client %d comes.\n", clientn);
-
-        //int n = 0;
-        //char buf[BUFLEN];
-        //while ((n = read(clfd, buf, BUFLEN-1)) > 0) {
-            //buf[n] = '\0';
-            //printf("%s", buf);
-            //fflush(stdout);
-            //send(clfd, buf, n, 0);
-        //}
-        //printf("\n");
-        //exit(-1);
-
-        int  errno;
-
-        map<string, vector<string> > packets;
-
-        errno = read_packets(&clfd, &packets);
-        if (errno != 0) {
-            printf("read packets error, closing clfd\n");
-            close(clfd);
-            continue;
-        }
-#ifdef DEBUG
-        for (map<string, vector<string> >::iterator p = packets.begin(); p != packets.end(); p++) {
-            for (int i = 0, len = (p->second).size(); i < len; ++i) {
-                printf("read %s packet:%s\n", (p->first).c_str(), (p->second)[i].c_str());
-            }
-        }
-#endif
-
-        string res = handle_packets(&packets["data"]);
-
-        errno = send_packets(&clfd, res);
-        if (errno != 0) {
-            printf("read packets error\n");
-            return -1;
-        }
-        //sleep(10);
-
-        close(clfd);
-    }
-
     return 0;
 }
