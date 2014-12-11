@@ -25,13 +25,19 @@ const char * const user_dict_path  = "./dict/user.dict.utf8";
 
 #define BUFLEN  128
 #define PAYLOADLEN 32
+#define KEYWORDNUM 10
 
 using namespace std;
 
 char socket_path[128] = "./unixsocket.socket";
 
+MixSegment       segment(dict_path, model_path);
+KeywordExtractor extractor(dict_path, model_path, idf_path, stop_words_path);
+
 string _itoa(int num);
 char   odd_check_byte(string data);
+void   split_contents(vector<string> &sentences, string stopword);
+double computeWeight(string sentence, const map<string, double> &word2weight);
 
 vector<vector<string> > get_packets(const int * const p_clfd, string last_buf, string target_type, int nr_packets);
 string handle_packets(const vector<string> *p_data);
@@ -350,27 +356,39 @@ string handle_packets(const vector<string> *p_data) {
     vector<string> sentences;
     sentences.push_back(client_data);
     for (int i = 0; i < num_stopwords; ++i) {
-        split_contents(&sentences, stopwords[i]);
+        split_contents(sentences, stopwords[i]);
     }
     //TODO
 
     //extractor, wordweights
 
+    map<string, double> word2weight;
+    vector<pair<string, double> > wordweights;
     extractor.extract(client_data, wordweights, KEYWORDNUM);
-    /*
-    string res = "from_server:";
-    for (int i = 0, len = (*p_data).size(); i < len; ++i) {
-        res += (*p_data)[i];
+    for (unsigned int i = 0; i < wordweights.size(); ++i) {
+        word2weight[wordweights[i].first] = wordweights[i].second;
     }
-    */
 
-    /*
-    string res = "from_server:";
-    for (int i = 0; i < 1333; ++i) {
-        res += "哈";
+    vector<pair<int, double> > indexAndweight;
+    for (int j = 0, len = sentences.size(); j < len; ++j) {
+        //TODO computeWeight
+        pari<int, double> index_weight = make_pair(j, computeWeight(sentences[i], word2weight));
+        indexAndweight.push_back(index_weight);
     }
+
+    sort(indexAndweight.begin(), indexAndweight.end(), sort_weight);
+    int req_num = indexAndweight.size() * 0.15;
+    if (req_num == 0) {
+        req_num = indexAndweight.empty() ? 0 : 1;
+    }
+    sort(indexAndweight.begin(), indexAndweight.begin() + req_num, sort_index);
+
+    string res = "";
+    for (int i = 0; i < req_num; ++i) {
+        res += sentences[indexAndweight[i].first] + "|";
+    }
+
     return res;
-    */
 }
 
 string pack_syn(int num_packets) {
@@ -439,4 +457,29 @@ int send_packets(const int * const p_clfd, string data) {
     }
     send(*p_clfd, fin_packet.c_str(), fin_packet.size(), 0);
     return 0;
+}
+
+void split_contents(vector<string> &sentences, string stopword) {
+    vector<string> res;
+    int stopword_len = stopword.size();
+    for (int i = 0, len = sentences.size(); i < len; ++i) {
+        int j = 0;
+        int sentence_len = sentences[i].size();
+        while (j != npos && j < sentence_len) {
+            int pos = sentences[i].find(stopword, j);
+            if (pos != npos) {
+                res.push_back(sentences[i].substr(j, pos - j));
+                pos += stopword_len;
+            }
+            j = pos;
+        }
+    }
+    sentences = res;
+}
+
+double computeWeight(string sentence, const map<string, double> &word2weight) {
+    vector<string> words;
+    segment.cut(sentence, words);
+//TODO
+
 }
