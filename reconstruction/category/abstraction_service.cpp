@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <fstream>
 #include <map>
+#include <set>
 #include <signal.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -35,6 +36,8 @@ MixSegment       segment(dict_path, model_path);
 KeywordExtractor extractor(dict_path, model_path, idf_path, stop_words_path);
 
 string _itoa(int num);
+//template<typename first, typename second>
+bool   sort_weight(const pair<int, double> &a, const pair<int, double> &b);
 char   odd_check_byte(string data);
 void   split_contents(vector<string> &sentences, string stopword);
 double computeWeight(string sentence, const map<string, double> &word2weight);
@@ -351,6 +354,7 @@ string handle_packets(const vector<string> *p_data) {
         client_data += (*p_data)[i];
     }
 
+    //split content into sentences
     const int num_stopwords = 7;
     string stopwords[num_stopwords] = {".", "。", "!", "！", "?", "？", "\n"};
     vector<string> sentences;
@@ -358,34 +362,30 @@ string handle_packets(const vector<string> *p_data) {
     for (int i = 0; i < num_stopwords; ++i) {
         split_contents(sentences, stopwords[i]);
     }
-    //TODO
-
-    //extractor, wordweights
 
     map<string, double> word2weight;
-    vector<pair<string, double> > wordweights;
-    extractor.extract(client_data, wordweights, KEYWORDNUM);
-    for (unsigned int i = 0; i < wordweights.size(); ++i) {
-        word2weight[wordweights[i].first] = wordweights[i].second;
+    vector<pair<string, double> > wordNweight;
+    extractor.extract(client_data, wordNweight, KEYWORDNUM);
+    for (unsigned int i = 0; i < wordNweight.size(); ++i) {
+        word2weight[wordNweight[i].first] = wordNweight[i].second;
     }
 
-    vector<pair<int, double> > indexAndweight;
+    vector<pair<int, double> > indexNweight;
     for (int j = 0, len = sentences.size(); j < len; ++j) {
-        //TODO computeWeight
         pari<int, double> index_weight = make_pair(j, computeWeight(sentences[i], word2weight));
-        indexAndweight.push_back(index_weight);
+        indexNweight.push_back(index_weight);
     }
 
-    sort(indexAndweight.begin(), indexAndweight.end(), sort_weight);
-    int req_num = indexAndweight.size() * 0.15;
+    sort(indexNweight.begin(), indexNweight.end(), sort_weight);
+    int req_num = indexNweight.size() * 0.15;
     if (req_num == 0) {
-        req_num = indexAndweight.empty() ? 0 : 1;
+        req_num = indexNweight.empty() ? 0 : 1;
     }
-    sort(indexAndweight.begin(), indexAndweight.begin() + req_num, sort_index);
+    sort(indexNweight.begin(), indexNweight.begin() + req_num, sort_index);
 
     string res = "";
     for (int i = 0; i < req_num; ++i) {
-        res += sentences[indexAndweight[i].first] + "|";
+        res += sentences[indexNweight[i].first] + "|";
     }
 
     return res;
@@ -479,7 +479,18 @@ void split_contents(vector<string> &sentences, string stopword) {
 
 double computeWeight(string sentence, const map<string, double> &word2weight) {
     vector<string> words;
+    set<string> used_words;
     segment.cut(sentence, words);
-//TODO
+    double weight = 0.0;
+    for (size_t i = 0; i < words.size(); ++i) {
+        if (used_words.find(words[i]) !== used_words.end()) {
+            used_words.insert(words[i]);
+            weight += word2weight[words[i]];
+        }
+    }
+    return weight;
+}
 
+bool sort_weight(const pair<int, double> &a, const pair<int, double> &b) {
+    return a.second > b.second;
 }
