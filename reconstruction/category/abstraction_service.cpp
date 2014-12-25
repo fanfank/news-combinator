@@ -38,6 +38,7 @@ KeywordExtractor extractor(dict_path, model_path, idf_path, stop_words_path);
 string _itoa(int num);
 //template<typename first, typename second>
 bool   sort_weight(const pair<int, double> &a, const pair<int, double> &b);
+bool   sort_index(const pair<int, double> &a, const pair<int, double> &b);
 char   odd_check_byte(string data);
 void   split_contents(vector<string> &sentences, string stopword);
 double computeWeight(string sentence, const map<string, double> &word2weight);
@@ -198,13 +199,13 @@ vector<vector<string> > get_packets(const int * const p_clfd, string last_buf, s
 
     while (n > 0 && nr_packets > 0) {
         string buf  = last_buf;
-        int buf_len = buf.size();
+        size_t buf_len = buf.size();
 
-        int st = 0;
-        int ed = 0;
+        size_t st = 0;
+        size_t ed = 0;
         do {
             if (0 == status) {
-                int st_old = st;
+                size_t st_old = st;
 
                 //read for type
                 ed = st + 4;
@@ -371,8 +372,8 @@ string handle_packets(const vector<string> *p_data) {
     }
 
     vector<pair<int, double> > indexNweight;
-    for (int j = 0, len = sentences.size(); j < len; ++j) {
-        pari<int, double> index_weight = make_pair(j, computeWeight(sentences[i], word2weight));
+    for (int i = 0, len = sentences.size(); i < len; ++i) {
+        pair<int, double> index_weight = make_pair(i, computeWeight(sentences[i], word2weight));
         indexNweight.push_back(index_weight);
     }
 
@@ -381,7 +382,7 @@ string handle_packets(const vector<string> *p_data) {
     if (req_num == 0) {
         req_num = indexNweight.empty() ? 0 : 1;
     }
-    sort(indexNweight.begin(), indexNweight.begin() + req_num, sort_index);
+    sort(indexNweight.begin(), indexNweight.end() + req_num, sort_index);
 
     string res = "";
     for (int i = 0; i < req_num; ++i) {
@@ -461,13 +462,13 @@ int send_packets(const int * const p_clfd, string data) {
 
 void split_contents(vector<string> &sentences, string stopword) {
     vector<string> res;
-    int stopword_len = stopword.size();
-    for (int i = 0, len = sentences.size(); i < len; ++i) {
-        int j = 0;
-        int sentence_len = sentences[i].size();
-        while (j != npos && j < sentence_len) {
-            int pos = sentences[i].find(stopword, j);
-            if (pos != npos) {
+    size_t stopword_len = stopword.size();
+    for (size_t i = 0, len = sentences.size(); i < len; ++i) {
+        size_t j = 0;
+        size_t sentence_len = sentences[i].size();
+        while (j != std::string::npos && j < sentence_len) {
+            size_t pos = sentences[i].find(stopword, j);
+            if (pos != std::string::npos) {
                 res.push_back(sentences[i].substr(j, pos - j));
                 pos += stopword_len;
             }
@@ -483,9 +484,12 @@ double computeWeight(string sentence, const map<string, double> &word2weight) {
     segment.cut(sentence, words);
     double weight = 0.0;
     for (size_t i = 0; i < words.size(); ++i) {
-        if (used_words.find(words[i]) !== used_words.end()) {
-            used_words.insert(words[i]);
-            weight += word2weight[words[i]];
+        if (used_words.find(words[i]) != used_words.end()) {
+            map<string, double>::const_iterator p = word2weight.find(words[i]);
+            if (p != word2weight.end()) {
+                used_words.insert(p->first);
+                weight += p->second;
+            }
         }
     }
     return weight;
@@ -493,4 +497,8 @@ double computeWeight(string sentence, const map<string, double> &word2weight) {
 
 bool sort_weight(const pair<int, double> &a, const pair<int, double> &b) {
     return a.second > b.second;
+}
+
+bool sort_index(const pair<int, double> &a, const pair<int, double> &b) {
+    return a.first > b.first;
 }
