@@ -17,6 +17,7 @@
 //#include "MixSegment.hpp"
 #include "KeywordExtractor.hpp"
 //#include "PosTagger.hpp"
+#include "util/daemonize.hpp"
 using namespace CppJieba;
 const char * const dict_path       = "./dict/jieba.dict.utf8";
 const char * const model_path      = "./dict/hmm_model.utf8";
@@ -53,7 +54,13 @@ string         pack_syn(int num_packets);
 vector<string> pack_data(string data, int payload_mx_len);
 string         pack_fin();
 
-int main(void) {
+int main(int argc, char **argv) {
+#ifndef DEBUG
+    //make this a daemon process
+    printf("Daemonizing...\n");
+    daemonize("abstraction_service", "./");
+#endif
+
     int fd, size;
     struct sockaddr_un un;
     un.sun_family = AF_UNIX;
