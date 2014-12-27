@@ -25,8 +25,9 @@ const char * const stop_words_path = "./dict/stop_words.utf8";
 const char * const user_dict_path  = "./dict/user.dict.utf8";
 
 #define BUFLEN  128
-#define PAYLOADLEN 32
+#define PAYLOADLEN 4096
 #define KEYWORDNUM 10
+//#define DEBUG
 
 using namespace std;
 
@@ -136,6 +137,10 @@ int main(void) {
 #endif
 
         string res = handle_packets(&packets["data"]);
+
+#ifdef DEBUG
+        printf("send contents:%s\n", res.c_str());
+#endif
 
         errno = send_packets(&clfd, res);
         if (errno != 0) {
@@ -354,20 +359,31 @@ string handle_packets(const vector<string> *p_data) {
     for (int i = 0, len = (*p_data).size(); i < len; ++i) {
         client_data += (*p_data)[i];
     }
+#ifdef DEBUG
+    printf("client_data:%s\n", client_data.c_str());
+#endif
 
     //split content into sentences
-    const int num_stopwords = 7;
+    const size_t num_stopwords = 7;
     string stopwords[num_stopwords] = {".", "。", "!", "！", "?", "？", "\n"};
     vector<string> sentences;
     sentences.push_back(client_data);
-    for (int i = 0; i < num_stopwords; ++i) {
+    for (size_t i = 0; i < num_stopwords; ++i) {
         split_contents(sentences, stopwords[i]);
     }
+
+#ifdef DEBUG
+    printf("*** sentences ***\n");
+    for (size_t i = 0; i < sentences.size(); ++i) {
+        printf("%s\n", sentences[i].c_str());
+    }
+    printf("*** sentences ***\n");
+#endif
 
     map<string, double> word2weight;
     vector<pair<string, double> > wordNweight;
     extractor.extract(client_data, wordNweight, KEYWORDNUM);
-    for (unsigned int i = 0; i < wordNweight.size(); ++i) {
+    for (size_t i = 0; i < wordNweight.size(); ++i) {
         word2weight[wordNweight[i].first] = wordNweight[i].second;
     }
 
@@ -378,14 +394,14 @@ string handle_packets(const vector<string> *p_data) {
     }
 
     sort(indexNweight.begin(), indexNweight.end(), sort_weight);
-    int req_num = indexNweight.size() * 0.15;
-    if (req_num == 0) {
-        req_num = indexNweight.empty() ? 0 : 1;
+    size_t req_num = indexNweight.size() * 0.15;
+    if (0 == req_num) {
+        req_num = indexNweight.size();
     }
-    sort(indexNweight.begin(), indexNweight.end() + req_num, sort_index);
+    sort(indexNweight.begin(), indexNweight.begin() + req_num, sort_index);
 
     string res = "";
-    for (int i = 0; i < req_num; ++i) {
+    for (size_t i = 0; i < req_num; ++i) {
         res += sentences[indexNweight[i].first] + "|";
     }
 
@@ -469,12 +485,24 @@ void split_contents(vector<string> &sentences, string stopword) {
         while (j != std::string::npos && j < sentence_len) {
             size_t pos = sentences[i].find(stopword, j);
             if (pos != std::string::npos) {
+#ifdef DEBUG
+                printf("start pos [%u], end pos[%u], substring is [%s]\n", j, pos, sentences[i].substr(j, pos - j).c_str());
+#endif
                 res.push_back(sentences[i].substr(j, pos - j));
                 pos += stopword_len;
+            } else {
+                res.push_back(sentences[i].substr(j));
+#ifdef DEBUG
+                printf("no stopword [%s] found after pos [%u] of sentence [%s]\n", stopword.c_str(), j, sentences[i].c_str());
+#endif
             }
             j = pos;
         }
     }
+#ifdef DEBUG
+    printf("stopword:%s\n", stopword.c_str());
+    printf("res size:%u\n", res.size());
+#endif
     sentences = res;
 }
 
@@ -500,5 +528,5 @@ bool sort_weight(const pair<int, double> &a, const pair<int, double> &b) {
 }
 
 bool sort_index(const pair<int, double> &a, const pair<int, double> &b) {
-    return a.first > b.first;
+    return a.first < b.first;
 }

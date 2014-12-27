@@ -244,13 +244,18 @@ function read_packets(&$fp) {
 }
 
 function main() {
-    $fp = fsockopen("unix://./unixsocket.socket", -1, $errno, $errstr, 0.1);
+    $fp = fsockopen("unix://../unixsocket.socket", -1, $errno, $errstr, 0.1);
     echo "got fp\n";
     if (!$fp) {
         echo "$errstr ($errno)\n";
     } else {
     
         $str = "我就是觉得现在互联网的限制太过无耻了！我擦，到底网络防火墙是谁搞出来的.为什么现在互联网什么都不给用？广电总局到底要封杀网络影音到什么时候。什么时候中国的网络环境能变好?我们要更开放的网络!";
+        for ($i = 0; $i < 5; ++$i) {
+            $str .= $str;
+        }
+        echo "original strlen [" . strlen($str) . "]\n";
+
         $arrDataPackets = pack_data($str);
         $syn_packet     = pack_syn(count($arrDataPackets));
         $fin_packet     = pack_fin();
@@ -272,7 +277,10 @@ function main() {
             die(-1);
         }
 
-        echo implode($arrPackets['data']) . "\n";
+        //print_r($arrPackets);
+        $server_data = implode($arrPackets['data']);
+        echo "server data strlen [" . strlen($server_data) . "]\n";
+        echo $server_data . "\n";
         echo "done\n";
     }
 }
