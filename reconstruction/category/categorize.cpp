@@ -124,6 +124,7 @@ int main(int argc, char *argv[]) {
             }
             avg_similarity += similarity;
         }
+        avg_similarity /= row_num;
 
         //handle similar texts
         //| title        | varchar(128)     | NO   |     |          |                |
@@ -159,7 +160,7 @@ int main(int argc, char *argv[]) {
         if (!set_similar_index.empty()) {
             sprintf(query, "INSERT INTO `news_category` (`title`, `source_names`, `day_time`, `preview_pic`, `abstract_ids`) VALUES ('%s','%s',%d,'%s','%s')\0", title.c_str(), source_names.c_str(), day_time, preview_pic.c_str(), abstract_ids.c_str());
             my_res = execSql(&mysql, query, strlen(query));
-            fprintf(stdout, "Average similarity:%lf\n", avg_similarity / set_similar_index.size());
+            fprintf(stdout, "Average similarity:%lf\n", avg_similarity);
         }
         /*
         if (NULL == my_res) {
