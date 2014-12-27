@@ -14,6 +14,10 @@ h2 {
     font-weight : bold;
 }
 
+.main_content {
+    margin : 30px 60px 30px 60px;
+}
+
 .entries_block {
     margin : 0px 10px 0px 10px;
 }

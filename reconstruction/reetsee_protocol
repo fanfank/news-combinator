@@ -1,4 +1,4 @@
-    4       <= 32bit int      1   payload length                            1
+    4          32bit int      1   payload length                            1
 | [type] | [payload length] | $ | payload ...    | odd check for type + payload length + $ + payload |
 
 type = 0000   //SYN packet

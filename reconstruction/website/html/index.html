@@ -18,35 +18,37 @@
 </head>
 <body>
     <div style="font-size:5px">注：本网站是个人毕业设计的展示样例，所有内容均来自互联网，如有侵犯请马上联系作者<a href="http://weibo.com/csdbreadstealer" target="_black">微博</a>进行删除</div>
-    <h1>吹水新闻</h1>
-    <div class='returnTop' title='带你飞～'>
-        <span class='s'></span>
-        <span class='b'></span>
-        返回顶部
-    </div>
-    <?php 
-        include MODULE_PATH . '/html/template/top_navigation.html';
-    ?>
-    <div id = "big_block">
-    <?php
-        foreach ($data as $day_time => $news_entries) {
-            $entries_title = substr($day_time, 0, 4) . "年" . substr($day_time, 4, 2) . "月" . substr($day_time, 6, 2) . "日新闻";
-            echo "<div><h2>$entries_title</h2></div>";
-            echo "<div class = 'entries_block'>";
-            foreach ($news_entries as $news_entry) {
-                //$arrSourceNames = explode(',', $news_entry['source_names']);
-                echo "<span class = 'entry'>";
-                echo "<span class = 'icons_block'>";
-                foreach ($news_entry['arr_uni_sources'] as $source_name) {
-                    echo "<img src='/static/icons/{$source_name}.png' width='15px' height='15px'>";
+    <div class="main_content">
+        <h1>吹水新闻</h1>
+        <div class='returnTop' title='带你飞～'>
+            <span class='s'></span>
+            <span class='b'></span>
+            返回顶部
+        </div>
+        <?php 
+            include MODULE_PATH . '/html/template/top_navigation.html';
+        ?>
+        <div id = "big_block">
+        <?php
+            foreach ($data as $day_time => $news_entries) {
+                $entries_title = substr($day_time, 0, 4) . "年" . substr($day_time, 4, 2) . "月" . substr($day_time, 6, 2) . "日新闻";
+                echo "<div><h2>$entries_title</h2></div>";
+                echo "<div class = 'entries_block'>";
+                foreach ($news_entries as $news_entry) {
+                    //$arrSourceNames = explode(',', $news_entry['source_names']);
+                    echo "<span class = 'entry'>";
+                    echo "<span class = 'icons_block'>";
+                    foreach ($news_entry['arr_uni_sources'] as $source_name) {
+                        echo "<img src='/static/icons/{$source_name}.png' width='15px' height='15px'>";
+                    }
+                    echo "</span>";
+                    echo "<a class='news_title' id='{$news_entry['id']}' href='/entry?category={$news_entry['id']}' title='{$news_entry['title']}'>{$news_entry['title']}</a>";
+                    echo "</span>";
                 }
-                echo "</span>";
-                echo "<a class='news_title' id='{$news_entry['id']}' href='/entry?category={$news_entry['id']}' title='{$news_entry['title']}'>{$news_entry['title']}</a>";
-                echo "</span>";
+                echo "</div>";
             }
-            echo "</div>";
-        }
-    ?>
+        ?>
+        </div>
     </div>
     <?php
         include MODULE_PATH . '/html/template/bottom_navigation.html';

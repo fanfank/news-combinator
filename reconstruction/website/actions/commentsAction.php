@@ -32,7 +32,7 @@ class commentsAction extends Actions_ActionBase {
             curl_setopt_array($objCurl, $arrCurlConf);
 
             $strContent = curl_exec($objCurl);
-            if (FALSE != $strContent) {
+            if (false != $strContent) {
                 $arrComments = array_merge($arrComments, $this->getComments($strContent, $arrInfo));
             }
         }
@@ -41,7 +41,20 @@ class commentsAction extends Actions_ActionBase {
         ///
 
         usort($arrComments, array($this, 'sortComments'));
-        $this->_retJson($arrComments);
+
+        //提取评论概括
+        $arrCommentsAbstract = $this->getCommentsAbstract($arrComments);
+        if (false === $arrCommentsAbstract) {
+            $arrCommentsAbstract = array();
+        }
+
+        $arrRetData = array(
+            'abstract' => $arrCommentsAbstract,
+            'comments' => $arrComments,
+        );
+
+        //$this->_retJson($arrComments);
+        $this->_retJson($arrRetData);
     }
 
     public function setCurlConf(&$arrCurlConf, $arrInfo) {
@@ -224,5 +237,54 @@ class commentsAction extends Actions_ActionBase {
         }
 
         return $arrOutput;
+    }
+
+    /**
+     * @author xuruiqi
+     * @param
+            array $arrComments : //参见getComments的输出
+     * @return
+            array $arrCommentsAbstract :
+                string 0 //概括的第1句
+                string 1
+                ...
+                string n //概括的第n+1句
+
+     * @desc   获得评论的概括
+     */
+    public function getCommentsAbstract($arrComments) {
+        $fp = fsockopen("unix://" . MODULE_PATH . "/../../service/category/unixsocket.socket", -1, $errno, $errmsg, 0.1);
+        if (!$fp) {
+            //echo "$errmsg ($errno)\n";
+            return false;
+        }
+
+        $strComments = "";
+        foreach ($arrComments as $comment) {
+            $strComments .= $comment['content'];
+        }
+
+        $arrDataPackets = Util_Protocol::pack_data($strComments);
+        $syn_packet     = Util_Protocol::pack_syn(count($arrDataPackets));
+        $fin_packet     = Util_Protocol::pack_fin();
+
+        //echo "syn_packet is [$syn_packet], length is [" . strlen($syn_packet) . "]\n";
+        fwrite($fp, $syn_packet, strlen($syn_packet));
+        foreach ($arrDataPackets as $data_packet) {
+            fwrite($fp, $data_packet, strlen($data_packet));
+        }
+        fwrite($fp, $fin_packet, strlen($fin_packet));
+
+        $arrPackets = Util_Protocol::read_packets($fp);
+        fclose($fp);
+
+        if (false === $arrPackets) {
+            //echo "Error reading packets\n";
+            return false;
+        }
+
+        $arrCommentsAbstract = explode('|', implode($arrPackets['data']));
+
+        return $arrCommentsAbstract;
     }
 }
