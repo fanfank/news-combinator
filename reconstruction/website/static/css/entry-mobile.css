@@ -82,6 +82,8 @@ h1 {
     height : 80px;
     text-align : center;
     vertical-align : middle;
+    text-decoration : none;
+    color : #00F;
 }
 .inline {
     display : inline-block;

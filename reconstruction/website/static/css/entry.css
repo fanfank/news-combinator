@@ -91,6 +91,8 @@ a {
     height : 80px;
     text-align : center;
     vertical-align : middle;
+    color : #00F;
+    text-decoration : none;
 }
 .inline {
     display : inline-block;

@@ -19,7 +19,8 @@ const char * const stop_words_path = "./dict/stop_words.utf8";
 const char * const user_dict_path  = "./dict/user.dict.utf8";
 
 const double       SIMILARITY_BOUND  = 0.85;
-const unsigned int MAX_SIMILAR_TEXTS = 7;
+const unsigned int MAX_SIMILAR_TEXTS = 5;
+const unsigned int MAX_TAG_NUM       = 15;
 
 int last_mtime = -1;
 
@@ -48,7 +49,7 @@ int main(int argc, char *argv[]) {
     vector<pair<string, double> > wordweights;
     //vector<pair<string, string> > wordtags;
     //vector<pair<string, double> > wordweights_compared;
-    int tags_num = 11;
+    int tags_num = MAX_TAG_NUM;
 
     if (!initLastMtime()) {
         fprintf(stderr, "Failed to get last mtime\n");
