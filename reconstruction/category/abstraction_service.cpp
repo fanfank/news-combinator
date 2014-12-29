@@ -169,8 +169,8 @@ string handle_packets(const vector<string> *p_data) {
 #endif
 
     //split content into sentences
-    const size_t num_stopwords = 7;
-    string stopwords[num_stopwords] = {".", "。", "!", "！", "?", "？", "\n"};
+    const size_t num_stopwords = 8;
+    string stopwords[num_stopwords] = {"|", ".", "。", "!", "！", "?", "？", "\n"};
     vector<string> sentences;
     sentences.push_back(client_data);
     for (size_t i = 0; i < num_stopwords; ++i) {

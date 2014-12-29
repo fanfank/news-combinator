@@ -261,7 +261,7 @@ class commentsAction extends Actions_ActionBase {
 
         $strComments = "";
         foreach ($arrComments as $comment) {
-            $strComments .= $comment['content'];
+            $strComments .= ($comment['content'] . "|");
         }
 
         $arrDataPackets = Util_Protocol::pack_data($strComments);
