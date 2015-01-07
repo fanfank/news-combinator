@@ -7,7 +7,7 @@
 class indexAction {
     const MAX_RANGE = 50;
     public function process() {
-        $intRange = intval($_GET['range']);
+        $intRange = @intval($_GET['range']);
         if (empty($intRange) || $intRange < 1 || self::MAX_RANGE < $intRange) {
             $intRange = 3;
         }
