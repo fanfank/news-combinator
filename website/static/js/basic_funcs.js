@@ -18,7 +18,7 @@ function timestampToADtime(timestamp) {
     var day     = new Date(timestamp * 1000);
     var year    = fillWith(day.getFullYear(), 4, '0', false);
     var month   = fillWith(day.getMonth() + 1, 2, '0', false);
-    var date    = fillWith(day.getDate() + 1, 2, '0', false);
+    var date    = fillWith(day.getDate(), 2, '0', false);
     var hours    = fillWith(day.getHours(), 2, '0', false);
     var minutes = fillWith(day.getMinutes(), 2, '0', false);
     var seconds = fillWith(day.getMinutes(), 2, '0', false);
