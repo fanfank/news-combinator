@@ -32,7 +32,13 @@ function init_contents(news_info) {
         if ('ext' in news_info[i] && news_info[i].ext instanceof Object &&  
                 news_info[i].ext.pic_url !== undefined) {
 
-            var pic_block = $("<div class='source_pic_block'></div>");                                                                                                                                                                       
+            var pic_block = $("<div class='source_pic_block'></div>");
+            pic_block.css({
+                "display":"block",
+                "text-align":"center",
+                "vertical-align":"middle",
+            });
+
             var pic = $("<img src='" + news_info[i].ext.pic_url + "'>");
 
             pic_block.append(pic);
