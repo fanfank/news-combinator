@@ -6,7 +6,7 @@
  */
 require_once('reetsee.php');
 function main() {
-    $db = Reetsee_Db::initDb(/*...*/);
+    $db = Reetsee_Db::initDb('reetsee_news', '127.0.0.1', 3306, 'root', '123abc', 'utf8');
     if (NULL === $db) {
         echo "get db error\n";
         return -1;
@@ -34,6 +34,24 @@ function main() {
     }
     $intLastAbsId = $db->insert_id;
 
+    //构造分类
+    $arrSql = array(
+        'table'  => 'news_category',   
+        'fields' => array(
+            'title'        => '我国今日喜迎杨莹生日！',
+            'source_names' => 'reetsee',
+            'day_time'     => 20150421,
+            'preview_pic'  => '',
+            'abstract_ids' => strval($intLastAbsId),
+        ),
+    );
+    $res = $db->insert($arrSql['table'], $arrSql['fields']);
+    if (!$res) {
+        echo 'Insert category error:' . $db->error . ' ' . $db->errno . "\n";
+        return -5;
+    }
+    $intLastCatId = $db->insert_id;
+
     //插入文章详细内容
     $strContent = '<p>    据悉，今天是中华人民共和国传统的杨莹破壳日。</p>' . 
         '<p>    杨莹生于广东省普宁市，是典型的潮汕好女人，同时其毫不利己、专门利人的精神使其在亲朋好友心中的形象格外高大。</p>' . 
@@ -45,7 +63,7 @@ function main() {
             'title'               => '我国今日喜迎杨莹生日！',    
             'source_name'         => 'reetsee',
             'content'             => $strContent,
-            'source_news_link'    => 'http://news.reetsee.com/entry?category=' . $db->insert_id,
+            'source_news_link'    => 'http://news.reetsee.com/entry?category=' . $intLastCatId,
             'source_comment_link' => '',
             'source_news_id'      => strval($intLastAbsId),
             'source_comment_id'   => strval($intLastAbsId),
@@ -59,8 +77,9 @@ function main() {
         echo 'Insert content error:' . $db->error . ' ' . $db->errno . "\n";
         return -3;
     }
-
     $intLastCtId = $db->insert_id;
+
+    //更新新闻摘要与详细内容的关联
     $arrSql = array(
         'table'  => 'news_abstract',
         'fields' => array(
@@ -75,6 +94,7 @@ function main() {
         echo 'Update abstract error:' . $db->error . ' ' . $db->errno . "\n";
         return -4;
     }
+
 
     return 0;
 }

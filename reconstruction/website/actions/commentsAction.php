@@ -78,6 +78,10 @@ class commentsAction extends Actions_ActionBase {
                 $strReq    = "/page/info?format=json&channel={$arrExt['channel_id']}&newsid={$arrInfo['entry']['source_news_id']}&group=" . intval($arrExt['group']) . "&compress=1&ie=utf-8&oe=utf-8&page={$arrInfo['pn']}&page_size=20&jsvar=requestId_444";
 
                 break;
+            case 'reetsee':
+                $strDomain = 'http://localhost:8000';
+                $strReq    = "/opinions?ie=utf-8&comment_id={$arrInfo['entry']['source_comment_id']}";
+                break;
         }
         $strUrl = $strDomain . $strReq;
         $arrCurlConf[CURLOPT_URL] = $strUrl;
@@ -158,6 +162,16 @@ class commentsAction extends Actions_ActionBase {
                     'content' => array('content'),
                 );
 
+                break;
+            case 'reetsee':
+                $data = json_decode($strContent, true);
+                $data = $data['data'];
+                $arrPathDict = array(
+                    'source'  => 'reetsee',    
+                    'user'    => array('user_name'),
+                    'time'    => array('time'),
+                    'content' => array('content'),
+                );
                 break;
         }
 

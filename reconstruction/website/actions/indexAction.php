@@ -56,9 +56,17 @@ class indexAction {
         }
         foreach ($data as $day_time => &$news_entries) {
             usort($news_entries, function ($a, $b) {
+                $bolRtsInA = in_array('reetsee', $a['arr_uni_sources']);
+                $bolRtsInB = in_array('reetsee', $b['arr_uni_sources']);
+                if ($bolRtsInA && !$bolRtsInB) {
+                    return false;
+                } else if (!$bolRtsInA && $bolRtsInB) {
+                    return true;
+                }
                 return count($a['arr_uni_sources']) < count($b['arr_uni_sources']);
             });
         }
+        unset($news_entries);
         include implode(DIRECTORY_SEPARATOR, array($HTML_DIR, 'index.html'));
         return 0;
     }
