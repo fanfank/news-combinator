@@ -28,6 +28,17 @@ function init_contents(news_info) {
         title_block.append(title);
         content.append(title_block);
 
+        //append picture
+        if ('ext' in news_info[i] && news_info[i].ext instanceof Object &&  
+                news_info[i].ext.pic_url !== undefined) {
+
+            var pic_block = $("<div class='source_pic_block'></div>");                                                                                                                                                                       
+            var pic = $("<img src='" + news_info[i].ext.pic_url + "'>");
+
+            pic_block.append(pic);
+            content.append(pic_block);
+        }
+
         //append passage
         var passage_block = $("<div class='source_passage_block'></div>");
         var passage       = $("<div class='source_passage'>" + news_info[i].content + "</div>");

@@ -92,6 +92,11 @@ class entryAction {
                 return -1;
             }
 
+            foreach ($res as &$row) {
+                $row['ext'] = unserialize($row['ext']);
+            }
+            unset($row);
+
             $arrNews = $res;
         } 
         unset($res);
