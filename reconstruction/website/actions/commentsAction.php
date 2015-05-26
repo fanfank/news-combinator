@@ -65,14 +65,14 @@ class commentsAction extends Actions_ActionBase {
                 break;
 
             case 'netease':
-                $arrExt = unserialize($arrInfo['entry']['ext']);
+                $arrExt = $arrInfo['entry']['ext'];
 
                 $strDomain = 'http://comment.news.163.com';
                 $strReq    = "/data/{$arrExt['board_id']}/df/{$arrInfo['entry']['source_comment_id']}_1.html";
 
                 break;
             case 'sina':
-                $arrExt = unserialize($arrInfo['entry']['ext']);
+                $arrExt = $arrInfo['entry']['ext'];
 
                 $strDomain = 'http://comment5.news.sina.com.cn';
                 $strReq    = "/page/info?format=json&channel={$arrExt['channel_id']}&newsid={$arrInfo['entry']['source_news_id']}&group=" . intval($arrExt['group']) . "&compress=1&ie=utf-8&oe=utf-8&page={$arrInfo['pn']}&page_size=20&jsvar=requestId_444";
