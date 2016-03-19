@@ -1,4 +1,5 @@
 <?php
+require_once('vendor/autoload.php');
 require_once('phpfetcher.php'); //phpfetcher是Reetsee.Xu(即我)写的一个简单的PHP实现的爬虫框架
                                 //可以参见https://github.com/fanfank/phpfetcher
 require_once('reetsee.php');    //请参考： https://github.com/fanfank/reetsee_phplib
@@ -58,7 +59,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
 
                 // 对于失败自动重试一次，因为发现图片上传有冷启动问题
                 $strPicCloudUrl = false;
-                for ($k = 0; $strPicCloudUrl != false && $k < 2; ++$k) {
+                for ($k = 0; $strPicCloudUrl == false && $k < 2; ++$k) {
                     $strPicCloudUrl = $this->_uploadPicToCloud($strSrcAttr);
                 }
 
