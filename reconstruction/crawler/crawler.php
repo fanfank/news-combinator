@@ -3,7 +3,90 @@ require_once('phpfetcher.php'); //phpfetcher是Reetsee.Xu(即我)写的一个简
                                 //可以参见https://github.com/fanfank/phpfetcher
 require_once('reetsee.php');    //请参考： https://github.com/fanfank/reetsee_phplib
 
+// 使用外部存储来保存图片
+use Qiniu\Auth;
+use Qiniu\Storage\BucketManager;
+
+$strQnAccessKey = ''; // 替换成自己的access key
+$strQnSecretKey = ''; // 替换成自己的secret key
+$strQnBucket = '';    // 替换成自己的bucket
+$strQnPicHost = '';   // 替换成图片URL的HOST
+
+$objQnAuth  = new Auth($strQnAccessKey, $strQnSecretKey);
+$objQnBkMgr = new BucketManager($objQnAuth);
+
 class news_crawler extends Phpfetcher_Crawler_Default {
+
+    /**
+     * @author  xuruiqi
+     * @desc    上传图片到云存储
+     */
+    protected function _uploadPicToCloud($strPicUrl) {
+        if (gettype($strPicUrl) != "string" || strlen($strPicUrl) == 0) {
+            return false;
+        }
+
+        global $objQnBkMgr;
+        global $strQnBucket;
+
+        list($ret, $err) = $objQnBkMgr->fetch($strPicUrl, $strQnBucket);
+
+        if ($err != NULL) {
+            echo "Upload picture $strPicUrl failed.\n";
+            return false;
+        }
+
+        global $strQnPicHost;
+        return $strQnPicHost . "/" . $ret["key"];
+    }
+
+    /**
+     * @author  xuruiqi
+     * @desc    通过$page抽取页面中的文本与图片
+     */
+    protected function _extractContent($page) {
+        $strContent = "";
+        $objContent = $page->sel('//p');
+        for ($i = 0; $i < count($objContent); ++$i) {
+
+            // 获取图片URL并上传图片到云存储
+            $strPicContent = "";
+            $objPic = $objContent[$i]->find("img");
+            for ($j = 0; $j < count($objPic); ++$j) {
+                $strSrcAttr = $objPic[$j]->getAttribute('src');
+                $strAltAttr = $objPic[$j]->getAttribute('alt');
+
+                // 对于失败自动重试一次，因为发现图片上传有冷启动问题
+                $strPicCloudUrl = false;
+                for ($k = 0; $strPicCloudUrl != false && $k < 2; ++$k) {
+                    $strPicCloudUrl = $this->_uploadPicToCloud($strSrcAttr);
+                }
+
+                if ($strPicCloudUrl == false) {
+                    continue;
+                }
+
+                if (gettype($strAltAttr) != "string") {
+                    $strAltAttr = "";
+                }
+
+                // 拼出图片的HTML标签
+                $strPicContent = $strPicContent 
+                        . "<div style='text-align:center;'>"
+                        . "<img src='$strPicCloudUrl' alt='$strAltAttr'></img>"
+                        . "</div>";
+            }
+
+            // 拼出段落内容的HTML标签
+            $strContent = $strContent
+                    . "<p>" . $strPicContent . "</p>"
+                    . "<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+                    . trim($objContent[$i]->plaintext . "\n")
+                    . "</p>";
+        }
+        return $strContent;
+    }
+
     public function handlePage($page) {
         //print_r($page->getHyperLinks());
         $arrExtraInfo = $page->getExtraInfo(array('job_name'));
@@ -87,13 +170,13 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         $timestamp = intval(time());
         echo "Checking $strUrl ...\n";
 
-        //$arrContent = array();
-        $strContent = "";
-        $objContent = $page->sel('//p');
-        for ($i = 0; $i < count($objContent); ++$i) {
-            //$arrContent[] = $objContent[$i]->plaintext;
-            $strContent .= "<p>" . ($objContent[$i]->plaintext . "\n") . "</p>";
-        }
+        $strContent = $this->_extractContent($page);
+        //$strContent = "";
+        //$objContent = $page->sel('//p');
+        //for ($i = 0; $i < count($objContent); ++$i) {
+        //    //$arrContent[] = $objContent[$i]->plaintext;
+        //    $strContent .= "<p>" . ($objContent[$i]->plaintext . "\n") . "</p>";
+        //}
 
         $matches = array();
         $intRes = preg_match('#(.*)/a/(\d{8})/(\d+)\.htm#', $strUrl, $matches);
@@ -146,13 +229,13 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         $timestamp = intval(time());
         echo "Checking $strUrl ...\n";
 
-        //$arrContent = array();
-        $strContent = "";
-        $objContent = $page->sel('//p');
-        for ($i = 0; $i < count($objContent); ++$i) {
-            //$arrContent[] = $objContent[$i]->plaintext;
-            $strContent .= "<p>" . ($objContent[$i]->plaintext . "\n") . "</p>";
-        }
+        $strContent = $this->_extractContent($page);
+        //$strContent = "";
+        //$objContent = $page->sel('//p');
+        //for ($i = 0; $i < count($objContent); ++$i) {
+        //    //$arrContent[] = $objContent[$i]->plaintext;
+        //    $strContent .= "<p>" . ($objContent[$i]->plaintext . "\n") . "</p>";
+        //}
 
         $matches = array();
         $intRes = preg_match('#(http://news\.163\.com)/(\d{2})/(\d{4})/\d+/(\w+)\.html#', $strUrl, $matches);
@@ -204,14 +287,13 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         $timestamp = intval(time());
         echo "Checking $strUrl ...\n";
 
-        //获取新闻正文
-        //$arrContent = array();
-        $strContent = "";
-        $objContent = $page->sel('//p');
-        for ($i = 0; $i < count($objContent); ++$i) {
-            //$arrContent[] = $objContent[$i]->plaintext;
-            $strContent .= "<p>" . ($objContent[$i]->plaintext . "\n") . "</p>";
-        }
+        $strContent = $this->_extractContent($page);
+        //$strContent = "";
+        //$objContent = $page->sel('//p');
+        //for ($i = 0; $i < count($objContent); ++$i) {
+        //    //$arrContent[] = $objContent[$i]->plaintext;
+        //    $strContent .= "<p>" . ($objContent[$i]->plaintext . "\n") . "</p>";
+        //}
 
         $matches = array();
         $intRes = preg_match('#(http://(?:\w+\.)*news\.sina\.com\.cn)/.*/(\d{4}-\d{2}-\d{2})/\d{4}(\d{8})\.(?:s)html#', $strUrl, $matches);
