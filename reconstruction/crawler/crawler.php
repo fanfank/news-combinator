@@ -1,4 +1,5 @@
 <?php
+require_once('vendor/autoload.php');
 require_once('phpfetcher.php'); //phpfetcher是Reetsee.Xu(即我)写的一个简单的PHP实现的爬虫框架
                                 //可以参见https://github.com/fanfank/phpfetcher
 require_once('reetsee.php');    //请参考： https://github.com/fanfank/reetsee_phplib
