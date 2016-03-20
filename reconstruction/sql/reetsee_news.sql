@@ -41,3 +41,16 @@ CREATE TABLE `news_category` (
     `abstract_ids` varchar(1024) NOT NULL DEFAULT '' COMMENT '关联的news_abstract表中的id',
     INDEX `dt` (`day_time`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='记录已分类的新闻';
+
+USE `reetsee_news`;
+CREATE TABLE `news_picture` (
+    `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY COMMENT 'primary key',
+    `abstract_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '新闻摘要内容对应的id',
+    `day_time` int(11) UNSIGNED NOT NULL DEFAULT 19700101 COMMENT '图片被获取时的日期',
+    `pic_key` varchar(128) NOT NULL DEFAULT '' COMMENT '图片的hash值',
+    `pic_url` varchar(1024) NOT NULL DEFAULT '' COMMENT '图片在云存储的地址',
+    `ext` varchar(2048) DEFAULT '' COMMENT '扩展字段',
+    UNIQUE KEY `pk` (`pic_key`),
+    INDEX `dt` (`day_time`),
+    INDEX `aid` (`abstract_id`)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='文章关联的图片列表';

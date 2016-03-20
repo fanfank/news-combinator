@@ -38,15 +38,34 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         }
 
         global $strQnPicHost;
-        return $strQnPicHost . "/" . $ret["key"];
+        return array(
+            "pic_key" => $ret['key'],
+            "pic_url" => $strQnPicHost . "/" . $ret['key'],
+        );
     }
 
     /**
      * @author  xuruiqi
+     * @return
+     *      array(
+     *          "content": string,
+     *          "pic_list": array(
+     *              array(
+     *                  'pic_key': 'xxx',
+     *                  'pic_url': 'yyy',
+     *              ),
+     *              array(
+     *                  'pic_key': 'zzz',
+     *                  'pic_url': 'uuu',
+     *              ),
+     *              ...
+     *          ),
+     *      )
      * @desc    通过$page抽取页面中的文本与图片
      */
     protected function _extractContent($page) {
         $strContent = "";
+        $arrPic = array();
         $objContent = $page->sel('//p');
         for ($i = 0; $i < count($objContent); ++$i) {
 
@@ -58,12 +77,12 @@ class news_crawler extends Phpfetcher_Crawler_Default {
                 $strAltAttr = $objPic[$j]->getAttribute('alt');
 
                 // 对于失败自动重试一次，因为发现图片上传有冷启动问题
-                $strPicCloudUrl = false;
-                for ($k = 0; $strPicCloudUrl == false && $k < 2; ++$k) {
-                    $strPicCloudUrl = $this->_uploadPicToCloud($strSrcAttr);
+                $arrPicInfo = false;
+                for ($k = 0; $arrPicInfo == false && $k < 2; ++$k) {
+                    $arrPicInfo = $this->_uploadPicToCloud($strSrcAttr);
                 }
 
-                if ($strPicCloudUrl == false) {
+                if ($arrPicInfo == false) {
                     continue;
                 }
 
@@ -74,8 +93,10 @@ class news_crawler extends Phpfetcher_Crawler_Default {
                 // 拼出图片的HTML标签
                 $strPicContent = $strPicContent 
                         . "<div style='text-align:center;'>"
-                        . "<img src='$strPicCloudUrl' alt='$strAltAttr'></img>"
+                        . "<img src='{$arrPicInfo['pic_url']}' alt='$strAltAttr'></img>"
                         . "</div>";
+
+                $arrPic[] = $arrPicInfo;
             }
 
             // 拼出段落内容的HTML标签
@@ -85,7 +106,11 @@ class news_crawler extends Phpfetcher_Crawler_Default {
                     . trim($objContent[$i]->plaintext . "\n")
                     . "</p>";
         }
-        return $strContent;
+
+        return array(
+            "content"  => $strContent,
+            "pic_list" => $arrPic,
+        );
     }
 
     public function handlePage($page) {
@@ -109,11 +134,13 @@ class news_crawler extends Phpfetcher_Crawler_Default {
             return TRUE;
         }
 
+        // 替换成自己的数据库信息
         $db = Reetsee_Db::initDb('reetsee_news', '127.0.0.1', 3306, 'root', '123abc', 'utf8');
         if (NULL === $db) {
             echo "get db error\n";
         }
 
+        // 插入摘要
         $arrSql = array(
             'table'  => 'news_abstract',
             'fields' => $arrData['news_abstract'],
@@ -127,6 +154,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
             return FALSE;
         }
 
+        // 插入详情
         $intLastAbsId = $db->insert_id;
         $arrData['news_content']['abstract_id'] = $intLastAbsId;
         $arrSql = array(
@@ -142,6 +170,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
             return FALSE;
         }
 
+        // 更新摘要表中对应的详情条目id
         $intLastCtId = $db->insert_id;
         $arrSql = array(
             'table'  => 'news_abstract',   
@@ -158,6 +187,25 @@ class news_crawler extends Phpfetcher_Crawler_Default {
             echo 'Update abstract error:' . $db->error . ' ' . $db->errno . "\n";
             return FALSE;
         }
+
+        // 插入文章关联的图片列表
+        foreach ($arrData['pic_list'] as $arrPicInfo) {
+            $arrSql = array(
+                'table' => 'news_picture',
+                'fields' => array(
+                    'id' => 0,
+                    'abstract_id' => $intLastAbsId,
+                    'day_time' => $arrData['news_abstract']['day_time'],
+                    'pic_key' => $arrPicInfo['pic_key'],
+                    'pic_url' => $arrPicInfo['pic_url'],
+                    'ext' => '',
+                ),
+            );
+            $res = $db->insert($arrSql['table'], $arrSql['fields']);
+            if (!$res) {
+                echo "Insert into news_picture failed:" . $db->error . ' ' . $db->errno . "\n";
+            }
+        }
         
         return TRUE;
     }
@@ -171,7 +219,8 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         $timestamp = intval(time());
         echo "Checking $strUrl ...\n";
 
-        $strContent = $this->_extractContent($page);
+        $arrContent = $this->_extractContent($page);
+        $strContent = $arrContent["content"];
         //$strContent = "";
         //$objContent = $page->sel('//p');
         //for ($i = 0; $i < count($objContent); ++$i) {
@@ -217,6 +266,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
                 'timestamp'           => $timestamp,
                 'ext'                 => '',
             ),
+            'pic_list' => $arrContent['pic_list'],
         );
         return $arrOutput;
     }
@@ -230,7 +280,8 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         $timestamp = intval(time());
         echo "Checking $strUrl ...\n";
 
-        $strContent = $this->_extractContent($page);
+        $arrContent = $this->_extractContent($page);
+        $strContent = $arrContent["content"];
         //$strContent = "";
         //$objContent = $page->sel('//p');
         //for ($i = 0; $i < count($objContent); ++$i) {
@@ -275,6 +326,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
                 'timestamp'           => $timestamp,
                 'ext'                 => serialize(array('board_id' => $matches_board_id[1])),
             ),
+            'pic_list' => $arrContent['pic_list'],
         );
         return $arrOutput;
     }
@@ -288,7 +340,8 @@ class news_crawler extends Phpfetcher_Crawler_Default {
         $timestamp = intval(time());
         echo "Checking $strUrl ...\n";
 
-        $strContent = $this->_extractContent($page);
+        $arrContent = $this->_extractContent($page);
+        $strContent = $arrContent["content"];
         //$strContent = "";
         //$objContent = $page->sel('//p');
         //for ($i = 0; $i < count($objContent); ++$i) {
@@ -336,6 +389,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
                 'timestamp'           => $timestamp,
                 'ext'                 => serialize(array('channel_id' => $matches_channel_id[1])),
             ),
+            'pic_list' => $arrContent['pic_list'],
         );
         return $arrOutput;
     }
