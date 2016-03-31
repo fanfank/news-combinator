@@ -2,7 +2,13 @@ News Crawler
 ============        
 A repo for news crawling. Then combine similar news.
 Temporarily used python and Scrapy framework.   
-Used Jieba and Scrapy
+Used Jieba and Scrapy    
+
+Version 1.0 is the current directory      
+Version 2.0 is in the `reconstruction` directory      
+
+1.0版本的代码参见当前目录    
+2.0版本的代码参见目录`reconstruction`      
     
 TODO
 ====    
