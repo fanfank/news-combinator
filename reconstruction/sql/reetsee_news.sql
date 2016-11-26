@@ -11,6 +11,7 @@ CREATE TABLE `news_abstract` (
     `day_time` int(11) UNSIGNED NOT NULL DEFAULT 19700101 COMMENT '日期格式为：YYYYmmdd',
     `timestamp` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '时间戳',
     INDEX  `dt` (`day_time`),
+    INDEX  `ts` (`timestamp`),
     UNIQUE KEY `snid` (`source_news_id`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='用于保存新闻摘要信息';
 
@@ -27,6 +28,7 @@ CREATE TABLE `news_content` (
     `abstract_id` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '新闻摘要内容对应的id值',
     `timestamp` int(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT '时间戳',
     `ext` varchar(2048) DEFAULT '' COMMENT '扩展字段',
+    INDEX  `ts` (`timestamp`),
     UNIQUE KEY `aid` (`abstract_id`),
     UNIQUE KEY `snid` (`source_news_id`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='用于保存新闻相关详细信息';

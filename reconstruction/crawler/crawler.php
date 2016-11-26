@@ -311,7 +311,7 @@ class news_crawler extends Phpfetcher_Crawler_Default {
             true
         );
 
-        $strTitle = trim($page->sel('//h1[@id=\'h1title\']', 0)->plaintext);
+        $strTitle = trim($page->sel('//h1', 0)->plaintext);
         $arrOutput = array(
             'news_abstract' => array(
                 'id'          => 0,
