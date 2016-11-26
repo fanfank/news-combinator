@@ -297,7 +297,19 @@ class news_crawler extends Phpfetcher_Crawler_Default {
 
 
         //获取boardId
-        preg_match('#boardId = "(.*)"#', $page->getContent(), $matches_board_id);
+        //preg_match('#boardId = "(.*)"#', $page->getContent(), $matches_board_id);
+        preg_match('#"productKey" \: "(.*)"#', $page->getContent(), $product_key_matches);
+        $content_info = json_decode(
+            file_get_contents(
+                'http://sdk.comment.163.com/api/v1/products/'
+                . $product_key_matches[1]
+                . '/threads/'
+                . strval($matches[4])
+                . '?ibc=jssdk&callback=&_='
+                . strval(time())
+            ), 
+            true
+        );
 
         $strTitle = trim($page->sel('//h1[@id=\'h1title\']', 0)->plaintext);
         $arrOutput = array(
@@ -319,12 +331,12 @@ class news_crawler extends Phpfetcher_Crawler_Default {
                 'source_name'         => 'netease',
                 'content'             => trim($strContent),
                 'source_news_link'    => $strUrl,
-                'source_comment_link' => "http://comment.news.163.com/{$matches_board_id[1]}/{$matches[4]}.html",
+                'source_comment_link' => "http://comment.news.163.com/{$content_info['boardId']}/{$matches[4]}.html",
                 'source_news_id'      => strval($matches[4]),
                 'source_comment_id'   => strval($matches[4]),
                 'abstract_id'         => 0,
                 'timestamp'           => $timestamp,
-                'ext'                 => serialize(array('board_id' => $matches_board_id[1])),
+                'ext'                 => serialize(array('board_id' => $content_info['boardId'], 'product_key' => $product_key_matches[1])),
             ),
             'pic_list' => $arrContent['pic_list'],
         );

@@ -1,0 +1,5 @@
+*.swp
+*.swo
+reconstruction/category/abstraction_service
+reconstruction/category/categorize
+reconstruction/category/lastmtime

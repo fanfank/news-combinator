@@ -68,7 +68,7 @@ class commentsAction extends Actions_ActionBase {
                 $arrExt = $arrInfo['entry']['ext'];
 
                 $strDomain = 'http://comment.news.163.com';
-                $strReq    = "/data/{$arrExt['board_id']}/df/{$arrInfo['entry']['source_comment_id']}_1.html";
+                $strReq    = "/api/v1/products/{$arrExt['product_key']}/threads/{$arrInfo['entry']['source_comment_id']}/comments/hotTopList?offset=0&limit=30&showLevelThreshold=72&headLimit=1&tailLimit=2&callback=getData&ibc=newspc";
 
                 break;
             case 'sina':
@@ -139,16 +139,16 @@ class commentsAction extends Actions_ActionBase {
                 break;
 
             case 'netease':
-                $res = preg_match('#^var \w+=({.*});$#', $strContent, $matches);
+                $res = preg_match("#getData\(\s+({.*})\);$#", $strContent, $matches);
 
                 $data = json_decode($matches[1], true);
-                $data = $data['hotPosts'];
+                $data = $data['comments'];
 
                 $arrPathDict = array(
                     'source'  => 'netease',   
-                    'user'    => array('1', 'n'),
-                    'time'    => array('1', 't'),
-                    'content' => array('1', 'b'),
+                    'user'    => array('user', 'nickname'),
+                    'time'    => array('createTime'),
+                    'content' => array('content'),
                 );
                 break;
             case 'sina':
